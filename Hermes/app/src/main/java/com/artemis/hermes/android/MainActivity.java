@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
+//    private FusedLocationProviderClient mFusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,4 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+//    public void getLocation() {
+//        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+//    }
 }
