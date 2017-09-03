@@ -3,6 +3,6 @@
     <cron>
         <url>/send-email</url>
         <description>Email users their list of work items.</description>
-        <schedule>every 2 hours</schedule>
+        <schedule>1 of jan 00:00</schedule>
     </cron>
 </cronentries>
