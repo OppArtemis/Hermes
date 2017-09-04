@@ -52,6 +52,9 @@ dependencies {
     // Firebase crash reporting
     compile 'com.google.firebase:firebase-crash:11.2.0'
 
+    // Required only if Facebook login support is required
+    compile('com.facebook.android:facebook-android-sdk:4.22.1')
+
     // --- UI Stuff ---
 
     // FirebaseUI for authentication
