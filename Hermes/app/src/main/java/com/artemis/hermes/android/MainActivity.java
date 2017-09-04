@@ -33,12 +33,16 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-// Location services libraries
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import android.location.Location;
-import android.content.pm.PackageManager;
 
+/**
+ * MainActivity class that handles the entry point of the application,
+ * which consists of:
+ * - Request user to login
+ * - Get the location from user (via location services)
+ *
+ * @author  Jonathan Lin & Jorge Quan
+ * @since   2017-09-03
+ */
 public class MainActivity extends AppCompatActivity {
 
     private Button loginButton;
@@ -46,11 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Choose an arbitrary request code value
     private static final int RC_SIGN_IN = 128;
-
-    // Location provider
-    private FusedLocationProviderClient mFusedLocationClient;
-    private int MY_PERMISSIONS_ACCESS_COARSE_LOCATION = 0;
-    private String locationString = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,20 +79,12 @@ public class MainActivity extends AppCompatActivity {
         } else {
             loginUser();
         }
-
-        // request location services permission
-        ActivityCompat.requestPermissions(this,
-                new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
-                MY_PERMISSIONS_ACCESS_COARSE_LOCATION);
-
-        // poll last known location
-        setupLocationServices();
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // RC_SIGN_IN is the request code you passed into startActivityForResult(...) when starting the sign in flow.
+        // RC_SIGN_IN is the request code you passed into startActivityForResult
         if (requestCode == RC_SIGN_IN) {
 
             if(resultCode == RESULT_OK){
@@ -115,44 +106,25 @@ public class MainActivity extends AppCompatActivity {
         displayMessage(getString(R.string.unknown_response));
     }
 
+    /**
+     * This method starts a new "Activity" for users that are login.
+     *
+     */
     private void loginUser(){
         Intent loginIntent = new Intent(MainActivity.this, SigninActivity.class);
         startActivity(loginIntent);
         finish();
     }
 
+    /**
+     * Helper method to display a message on screen.
+     *
+     * @param message This is the string to display.
+     */
     private void displayMessage(String message){
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
-    public void setupLocationServices() {
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            locationString = "Lat: " + location.getLatitude() +
-                                    " Long: " + location.getLongitude();
-
-                            Log.d("LocationServices", "Location found: " + locationString);
-                        }
-                    }
-                });
-    }
 
 //    @Override
 //    public boolean onCreateOptionsMenu(Menu menu) {

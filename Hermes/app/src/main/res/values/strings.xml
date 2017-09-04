@@ -8,9 +8,11 @@
     <string name="no_network">No Network</string>
     <string name="user_profile">Welcome to your profile page</string>
     <string name="profile_title">User Profile</string>
-    <string name="user_name">Inducesmile</string>
+    <string name="user_name">myUserName</string>
+    <string name="location_info">myLocation</string>
     <string name="logout">LOGOUT</string>
     <string name="delete_user">DELETE USER</string>
+    <string name="update_location">GET MY LOCATION</string>
     <string name="sign_out_error">Failed to sign out</string>
     <string name="user_deletion_error">Failed to delete user</string>
 

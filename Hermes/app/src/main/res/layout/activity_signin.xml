@@ -26,6 +26,26 @@
         android:textStyle="bold"
         android:textColor="@color/colorSlateBlue"
         android:layout_centerHorizontal="true"/>
+    <TextView
+        android:id="@+id/location_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/user_name"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:text="@string/location_info"
+        android:textSize="15dp"
+        android:textColor="@color/colorSlateBlue"/>
+    <Button
+        android:id="@+id/update_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/location_info"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="33dp"
+        android:background="@color/colorSlateBlue"
+        android:textColor="@color/colorWhite"
+        android:text="@string/update_location" />
     <LinearLayout
         android:id="@+id/button_wrapper"
         android:layout_width="match_parent"
