@@ -16,7 +16,7 @@
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView2"
+        android:layout_below="@+id/textView3"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="22dp"
         android:text="Sign me up" />
@@ -27,7 +27,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/textView3"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="76dp"/>
+        android:layout_marginTop="76dp"
+        android:text=""/>
 
 
 </RelativeLayout>

@@ -28,6 +28,9 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import android.content.Intent;
 import java.util.Arrays;
 
+// Debugging
+import android.util.Log;
+
 public class MainActivity extends AppCompatActivity {
 
     // Choose an arbitrary request code value
@@ -39,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() == null) {
+        FirebaseUser user = auth.getCurrentUser();
+        if (user == null) {
 
             startActivityForResult(
                     AuthUI.getInstance()
@@ -51,8 +55,20 @@ public class MainActivity extends AppCompatActivity {
                     RC_SIGN_IN);
             finish();
             return;
-        } else {
-            // already signed in, do nothing?
+       } else {
+            // already signed in, do nothing
+            String userName = user.getDisplayName();
+            String myEmail = user.getEmail();
+
+            Log.d("My name", userName);
+            Log.d("my email", myEmail);
+
+            setContentView(R.layout.login_info);
+            TextView textView1 = (TextView) this.findViewById(R.id.userName);
+            textView1.setText(String.valueOf(userName));
+
+            TextView textView2 = (TextView) this.findViewById(R.id.myEmail);
+            textView2.setText(String.valueOf(myEmail));
         }
     }
 
@@ -86,11 +102,11 @@ public class MainActivity extends AppCompatActivity {
 
             result="Internal Error";
 
+            Log.d("the result", result);
+
             setContentView(R.layout.activity_main);
             TextView textView = (TextView) this.findViewById(R.id.signInResult);
             textView.setText(String.valueOf(result));
-            finish();
-            return;
         }
     }
 
