@@ -125,6 +125,15 @@ public class SigninActivity extends AppCompatActivity {
                 });
             }
         });
+
+        // Button to update user's location
+        Button showMapButton = (Button)findViewById(R.id.view_map);
+        showMapButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                goToMap();
+            }
+        });
     }
 
     /**
@@ -203,4 +212,11 @@ public class SigninActivity extends AppCompatActivity {
         locationInfo = (TextView)findViewById(R.id.location_info);
         locationInfo.setText(TextUtils.isEmpty(locationString)? "Could not find location" : locationString);
     }
+
+    private void goToMap(){
+        Intent mapIntent = new Intent(this, MapsActivityCurrentPlace.class);
+        startActivity(mapIntent);
+        finish();
+    }
+
 }

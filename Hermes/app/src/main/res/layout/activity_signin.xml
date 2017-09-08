@@ -36,16 +36,30 @@
         android:text="@string/location_info"
         android:textSize="15dp"
         android:textColor="@color/colorSlateBlue"/>
+
+    <Button
+        android:id="@+id/view_map"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="13dp"
+        android:background="@color/colorSlateBlue"
+        android:text="@string/view_map"
+        android:textColor="@color/colorWhite"
+        android:layout_below="@+id/update_location"
+        android:layout_alignLeft="@+id/update_location"
+        android:layout_alignStart="@+id/update_location" />
+
     <Button
         android:id="@+id/update_location"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/location_info"
-        android:layout_centerHorizontal="true"
         android:layout_marginTop="33dp"
         android:background="@color/colorSlateBlue"
+        android:text="@string/update_location"
         android:textColor="@color/colorWhite"
-        android:text="@string/update_location" />
+        android:layout_below="@+id/location_info"
+        android:layout_centerHorizontal="true" />
+
     <LinearLayout
         android:id="@+id/button_wrapper"
         android:layout_width="match_parent"
