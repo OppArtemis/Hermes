@@ -17,6 +17,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.content.pm.ActivityInfo;
 import android.util.Log;
+import java.util.Calendar;
+import java.util.Date;
 
 // Firebase libraries
 import com.firebase.ui.auth.AuthUI;
@@ -25,6 +27,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DatabaseReference;
 
 // Location services libraries
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -51,6 +55,13 @@ public class SigninActivity extends AppCompatActivity {
 
     private FirebaseAuth auth;
 
+    // Stores User ID (unique key for database)
+    private String mUserId;
+
+    // --- Database ---
+    // Stores the reference to the database
+    private DatabaseReference mDatabase;
+
     // Location provider
     private FusedLocationProviderClient mFusedLocationClient;
     private int MY_PERMISSIONS_ACCESS_COARSE_LOCATION = 0;
@@ -65,6 +76,9 @@ public class SigninActivity extends AppCompatActivity {
         {
             signOut();
         }
+
+        // Store information in the database
+        storeBasicInfoIntoDatabase();
 
         // Set up the profile page
         setContentView(R.layout.activity_signin);
@@ -197,6 +211,9 @@ public class SigninActivity extends AppCompatActivity {
 
                             Log.d("LocationServices", "Location found: " + locationString);
 
+                            // Update database
+                            updateLocationInDatabase();
+
                             // Display location on profile page.
                             displayLoginUserLocationInfo();
                         }
@@ -212,11 +229,45 @@ public class SigninActivity extends AppCompatActivity {
         locationInfo = (TextView)findViewById(R.id.location_info);
         locationInfo.setText(TextUtils.isEmpty(locationString)? "Could not find location" : locationString);
     }
-
+    
     private void goToMap(){
         Intent mapIntent = new Intent(this, MapsActivityCurrentPlace.class);
         startActivity(mapIntent);
         finish();
     }
 
+    /**
+     * Helper method store basic information onto database.
+     *
+     */
+    private void storeBasicInfoIntoDatabase(){
+        // Instantiate a reference to the database
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        // User ID acts as the key to the database
+        mUserId = auth.getCurrentUser().getUid();
+
+        Date currentTime = Calendar.getInstance().getTime();
+        String userName = auth.getCurrentUser().getDisplayName();
+
+        mDatabase.child("users").
+                child(mUserId).
+                child("Name").
+                setValue(userName);
+        mDatabase.child("users").
+                child(mUserId).
+                child("lastLoginTime").
+                setValue(String.valueOf(currentTime));
+    }
+
+    /**
+     * Helper method to set location_info on database.
+     *
+     */
+    private void updateLocationInDatabase(){
+        mDatabase.child("users").
+                child(mUserId).
+                child("location").
+                setValue(locationString);
+    }
 }
