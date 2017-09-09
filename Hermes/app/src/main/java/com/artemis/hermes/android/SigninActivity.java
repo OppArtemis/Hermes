@@ -15,8 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.pm.ActivityInfo;
-import android.util.Log;
+
 import java.util.Calendar;
 import java.util.Date;
 
@@ -94,7 +93,7 @@ public class SigninActivity extends AppCompatActivity {
         setupLocationServices();
 
         // Button to update user's location
-        Button updateLocation = (Button)findViewById(R.id.update_location);
+        Button updateLocation = (Button)findViewById(R.id.button_currentLocation);
         updateLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -229,7 +228,7 @@ public class SigninActivity extends AppCompatActivity {
         locationInfo = (TextView)findViewById(R.id.location_info);
         locationInfo.setText(TextUtils.isEmpty(locationString)? "Could not find location" : locationString);
     }
-    
+
     private void goToMap(){
         Intent mapIntent = new Intent(this, MapsActivityCurrentPlace.class);
         startActivity(mapIntent);

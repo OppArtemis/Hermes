@@ -30,35 +30,60 @@
         android:id="@+id/location_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/user_name"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="14dp"
         android:text="@string/location_info"
         android:textSize="15dp"
-        android:textColor="@color/colorSlateBlue"/>
+        android:textColor="@color/colorSlateBlue"
+        android:layout_below="@+id/user_name"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:id="@+id/view_map"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="13dp"
         android:background="@color/colorSlateBlue"
         android:text="@string/view_map"
         android:textColor="@color/colorWhite"
-        android:layout_below="@+id/update_location"
-        android:layout_alignLeft="@+id/update_location"
-        android:layout_alignStart="@+id/update_location" />
+        android:layout_below="@+id/editText_targetLocation"
+        android:layout_marginTop="22dp"
+        android:layout_alignLeft="@+id/editText_targetLocation"
+        android:layout_alignStart="@+id/editText_targetLocation" />
 
     <Button
-        android:id="@+id/update_location"
+        android:id="@+id/button_currentLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="33dp"
         android:background="@color/colorSlateBlue"
         android:text="@string/update_location"
         android:textColor="@color/colorWhite"
-        android:layout_below="@+id/location_info"
-        android:layout_centerHorizontal="true" />
+        android:layout_marginRight="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_above="@+id/editText_targetLocation"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:id="@+id/button_copyCurrentLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorSlateBlue"
+        android:text="@string/copy_current"
+        android:textColor="@color/colorWhite"
+        android:layout_above="@+id/button_startSearch"
+        android:layout_alignLeft="@+id/button_currentLocation"
+        android:layout_alignStart="@+id/button_currentLocation" />
+
+    <Button
+        android:id="@+id/button_startSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/colorSlateBlue"
+        android:text="@string/start_search"
+        android:textColor="@color/colorWhite"
+        android:layout_alignBaseline="@+id/view_map"
+        android:layout_alignBottom="@+id/view_map"
+        android:layout_alignLeft="@+id/button_copyCurrentLocation"
+        android:layout_alignStart="@+id/button_copyCurrentLocation" />
 
     <LinearLayout
         android:id="@+id/button_wrapper"
@@ -86,4 +111,28 @@
             android:layout_marginLeft="3dp"
             android:layout_weight="1"/>
     </LinearLayout>
+
+    <EditText
+        android:id="@+id/editText_currentLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:layout_marginTop="22dp"
+        android:layout_below="@+id/location_info"
+        android:layout_alignRight="@+id/location_info"
+        android:layout_alignEnd="@+id/location_info" />
+
+    <EditText
+        android:id="@+id/editText_targetLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Name"
+        android:layout_below="@+id/editText_currentLocation"
+        android:layout_alignLeft="@+id/editText_currentLocation"
+        android:layout_alignStart="@+id/editText_currentLocation" />
+
 </RelativeLayout>
