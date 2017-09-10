@@ -27,4 +27,8 @@ allprojects {
 
    dependencies {
     }
+
+    ext {
+        googleApiVersion = '11.2.2'
+    }
 }
