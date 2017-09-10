@@ -6,7 +6,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.42'
+        classpath "com.google.appengine:gradle-appengine-plugin:$rootProject.ext.backendSdkVersion"
     }
 }
 
@@ -22,15 +22,15 @@ sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
 
 dependencies {
-    appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.42'
+    appengineSdk "com.google.appengine:appengine-java-sdk:$rootProject.ext.backendSdkVersion"
     compile 'javax.servlet:servlet-api:2.5'
     compile 'com.google.firebase:firebase-server-sdk:3.0.3'
-    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.42'
+    compile "com.google.appengine:appengine-api-1.0-sdk:$rootProject.ext.backendSdkVersion"
     compile 'org.apache.httpcomponents:httpclient:4.5.3'
-    compile 'com.google.appengine:appengine-java-sdk:1.9.42'
-    compile 'com.google.appengine:appengine-endpoints:1.9.42'
-    compile 'com.google.appengine:appengine-endpoints-deps:1.9.42'
-    compile 'com.google.appengine:appengine:1.9.42'
+//    compile "com.google.appengine:appengine-java-sdk:$rootProject.ext.backendSdkVersion"
+    compile "com.google.appengine:appengine-endpoints:$rootProject.ext.backendSdkVersion"
+    compile "com.google.appengine:appengine-endpoints-deps:$rootProject.ext.backendSdkVersion"
+    compile "com.google.appengine:appengine:$rootProject.ext.backendSdkVersion"
 }
 
 appengine {
