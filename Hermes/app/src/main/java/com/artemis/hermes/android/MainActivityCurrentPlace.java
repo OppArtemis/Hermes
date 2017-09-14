@@ -34,7 +34,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -89,7 +88,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
     /**
      * The formatted location address.
      */
-    private String mAddressOutput;
+    private String mCurrentAddressOutput;
 
     /**
      * Receiver registered with this activity to get the response from FetchAddressIntentService.
@@ -109,6 +108,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
     private EditText mLocationTargetEditText;
     private Button mCopyCurrentLocationButton;
     private Button mStartSearch;
+    private Button mNavigate;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -122,14 +122,16 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
         mLocationTargetEditText = (EditText) findViewById(R.id.location_target_edit);
         mCopyCurrentLocationButton = (Button) findViewById(R.id.copy_current_location);
         mStartSearch = (Button) findViewById(R.id.button_startSearch);
+        mNavigate = (Button) findViewById(R.id.button_navigate);
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
-        mAddressOutput = getString(R.string.current_location_searching);
+        mCurrentAddressOutput = getString(R.string.current_location_searching);
         updateValuesFromBundle(savedInstanceState);
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        fetchAddressButtonHandler(null);
         updateUIWidgets();
         setHandles();
     }
@@ -146,6 +148,13 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 startSearchProc();
+            }
+        });
+
+        mNavigate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                navigateToLocation();
             }
         });
     }
@@ -173,7 +182,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
             // Check savedInstanceState to see if the location address string was previously found
             // and stored in the Bundle. If it was found, display the address string in the UI.
             if (savedInstanceState.keySet().contains(LOCATION_ADDRESS_KEY)) {
-                mAddressOutput = savedInstanceState.getString(LOCATION_ADDRESS_KEY);
+                mCurrentAddressOutput = savedInstanceState.getString(LOCATION_ADDRESS_KEY);
                 displayAddressOutput();
             }
         }
@@ -258,7 +267,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
      * Updates the address in the UI.
      */
     private void displayAddressOutput() {
-        String outputStr = getString(R.string.current_location_start) + " " + mAddressOutput;
+        String outputStr = getString(R.string.current_location_start) + " " + mCurrentAddressOutput;
         mLocationAddressTextView.setText(outputStr);
     }
 
@@ -288,7 +297,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
         savedInstanceState.putBoolean(ADDRESS_REQUESTED_KEY, mAddressRequested);
 
         // Save the address string.
-        savedInstanceState.putString(LOCATION_ADDRESS_KEY, mAddressOutput);
+        savedInstanceState.putString(LOCATION_ADDRESS_KEY, mCurrentAddressOutput);
         super.onSaveInstanceState(savedInstanceState);
     }
 
@@ -307,7 +316,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
         protected void onReceiveResult(int resultCode, Bundle resultData) {
 
             // Display the address string or an error message sent from the intent service.
-            mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
+            mCurrentAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
             displayAddressOutput();
 
             // Show a toast message if an address was found.
@@ -436,10 +445,25 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
     }
 
     private void copyCurrentLocationToTargetLocation(){
-        mLocationTargetEditText.setText(mAddressOutput);
+        mLocationTargetEditText.setText(mCurrentAddressOutput);
     }
 
     private void startSearchProc() {
         showSnackbar("Searching: " + mLocationTargetEditText.getText());
+    }
+
+    private void navigateToLocation() {
+        String sourceLocation = mCurrentAddressOutput;
+        String targetLocation = "McDonalds Northfield, Waterloo, Canada";
+        String transportationMode = "driving";
+
+        String mapUrl = "https://www.google.com/maps/dir/?api=1" +
+                "&origin=" + sourceLocation +
+                "&destination=" + targetLocation +
+                "&travelmode=" + transportationMode;
+
+        Uri location = Uri.parse(mapUrl);
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, location);
+        startActivity(mapIntent);
     }
 }
