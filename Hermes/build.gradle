@@ -16,7 +16,6 @@ buildscript {
 }
 
 allprojects {
-
     repositories {
         jcenter()
 
@@ -28,3 +27,9 @@ allprojects {
    dependencies {
     }
 }
+
+//project(":app") {
+//    dependencies {
+//        compile project(":logic")
+//    }
+//}

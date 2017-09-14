@@ -21,6 +21,11 @@ import java.util.Date;
 
 // Firebase libraries
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -65,6 +70,8 @@ public class SigninActivity extends AppCompatActivity {
     private FusedLocationProviderClient mFusedLocationClient;
     private int MY_PERMISSIONS_ACCESS_COARSE_LOCATION = 0;
     private String locationString = null;
+    private boolean mRequestingLocationUpdates = true;
+    private LocationCallback mLocationCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,15 +98,6 @@ public class SigninActivity extends AppCompatActivity {
 
         // poll last known location
         setupLocationServices();
-
-        // Button to update user's location
-        Button updateLocation = (Button)findViewById(R.id.button_currentLocation);
-        updateLocation.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setupLocationServices();
-            }
-        });
 
         // Button to logout
         Button logoutButton = (Button)findViewById(R.id.sign_out);
@@ -180,6 +178,33 @@ public class SigninActivity extends AppCompatActivity {
         }
     }
 
+    public void setupLocationServices2() {
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+    }
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if (mRequestingLocationUpdates) {
+//            startLocationUpdates();
+//        }
+//    }
+
+//    private void startLocationUpdates() {
+//        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+//                mLocationCallback,
+//                null /* Looper */);
+//    }
+
     /**
      * This method gets the location string from Location Services
      * that will be stored on a member variable.
@@ -230,7 +255,7 @@ public class SigninActivity extends AppCompatActivity {
     }
 
     private void goToMap(){
-        Intent mapIntent = new Intent(this, MapsActivityCurrentPlace.class);
+        Intent mapIntent = new Intent(this, MainActivityCurrentPlace.class);
         startActivity(mapIntent);
         finish();
     }

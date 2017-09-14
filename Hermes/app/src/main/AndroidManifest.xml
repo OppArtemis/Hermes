@@ -17,12 +17,14 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SigninActivity"></activity>
-        <activity android:name=".MapsActivityCurrentPlace"></activity>
+        <activity android:name=".SigninActivity" />
+        <activity android:name=".MainActivityCurrentPlace" />
+        <service
+            android:name=".FetchAddressIntentService"
+            android:exported="false"/>
 
         <meta-data
             android:name="com.google.android.gms.version"
