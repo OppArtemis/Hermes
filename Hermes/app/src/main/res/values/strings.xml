@@ -10,6 +10,7 @@
     <string name="profile_title">User Profile</string>
     <string name="user_name">myUserName</string>
     <string name="location_info">myLocation</string>
+    <string name="custom_message">myMessage</string>
     <string name="logout">LOGOUT</string>
     <string name="delete_user">DELETE USER</string>
     <string name="update_location">GET MY LOCATION</string>
