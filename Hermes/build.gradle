@@ -26,6 +26,11 @@ allprojects {
 
    dependencies {
     }
+
+    ext {
+        googleApiVersion = '11.2.2'
+        backendSdkVersion = '1.9.55'
+    }
 }
 
 //project(":app") {
