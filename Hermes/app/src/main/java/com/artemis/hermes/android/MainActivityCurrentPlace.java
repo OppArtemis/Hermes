@@ -298,7 +298,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
             mDatabase.child("users").
                     child(mUserId).
                     child("location").
-                    setValue(mCurrentAddressOutput);
+                    setValue(locationString);
         }
     }
 
