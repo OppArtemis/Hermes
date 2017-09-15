@@ -68,7 +68,6 @@ dependencies {
     }
 
     // This is used by the Google HTTP client library.
-    compile 'com.google.guava:guava:23.0-android'
     compile 'com.google.code.gson:gson:2.7'
     compile ('com.google.http-client:google-http-client-gson:1.22.0') {
         exclude module: 'httpclient'

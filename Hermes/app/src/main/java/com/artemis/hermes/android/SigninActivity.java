@@ -11,12 +11,10 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.content.pm.ActivityInfo;
 import android.util.Log;
 
 import java.io.IOException;
@@ -25,30 +23,21 @@ import java.util.Date;
 
 // Firebase libraries
 import com.artemis.hermes.backend.myApi.MyApi;
-import com.artemis.hermes.backend.myApi.model.MyBean;
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
+import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
 
-// Location services libraries
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import android.location.Location;
-import android.content.pm.PackageManager;
 
 /**
  * SigninActivity class that handles specific activity for users who are signed in,
@@ -76,13 +65,6 @@ public class SigninActivity extends AppCompatActivity {
     // Stores the reference to the database
     private DatabaseReference mDatabase;
 
-    // Location provider
-    private FusedLocationProviderClient mFusedLocationClient;
-    private int MY_PERMISSIONS_ACCESS_COARSE_LOCATION = 0;
-    private String locationString = null;
-    private boolean mRequestingLocationUpdates = true;
-    private LocationCallback mLocationCallback;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,14 +82,6 @@ public class SigninActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signin);
         setTitle(getString(R.string.profile_title));
         displayLoginUserProfileName();
-
-        // request location services permission
-        ActivityCompat.requestPermissions(this,
-                new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
-                MY_PERMISSIONS_ACCESS_COARSE_LOCATION);
-
-        // poll last known location
-        setupLocationServices();
 
         // Button to logout
         Button logoutButton = (Button)findViewById(R.id.sign_out);
@@ -191,70 +165,10 @@ public class SigninActivity extends AppCompatActivity {
         }
     }
 
-    public void setupLocationServices2() {
-        LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
-
-        SettingsClient client = LocationServices.getSettingsClient(this);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-    }
-
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        if (mRequestingLocationUpdates) {
-//            startLocationUpdates();
-//        }
-//    }
-
-//    private void startLocationUpdates() {
-//        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-//                mLocationCallback,
-//                null /* Looper */);
-//    }
-
     /**
-     * This method gets the location string from Location Services
-     * that will be stored on a member variable.
+     * Helper method to start an activity on maps.
      *
      */
-    public void setupLocationServices() {
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            locationString = "Latitude: " + location.getLatitude() +
-                                    " Longitude: " + location.getLongitude();
-
-                            Log.d("LocationServices", "Location found: " + locationString);
-
-                            // Update database
-                            updateLocationInDatabase();
-                        }
-                    }
-                });
-    }
-
     private void goToMap(){
         Intent mapIntent = new Intent(this, MainActivityCurrentPlace.class);
         startActivity(mapIntent);
@@ -286,24 +200,26 @@ public class SigninActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper method to set location_info on database.
+     * EndpointsAsyncTask class that talks to the backend logic endpoints
+     * which returns a messsage to the user.
      *
+     * @author  Jorge Quan
+     * @since   2017-09-14
      */
-    private void updateLocationInDatabase(){
-        mDatabase.child("users").
-                child(mUserId).
-                child("location").
-                setValue(locationString);
-    }
-
     private class EndpointsAsyncTask extends AsyncTask<String, Void, String> {
         private MyApi myApiService = null;
 
+        /**
+         * Method that performs the call to the API
+         *
+         * @param params to enter as input for API
+         *
+         * @return data of the API
+         */
         @Override
         protected String doInBackground(String... params) {
 
             if (myApiService == null) {  // Only do this once
-                MyApi service;
                 MyApi.Builder builder = new MyApi.Builder(
                         AndroidHttp.newCompatibleTransport(),
                         new GsonFactory(), null)
@@ -321,10 +237,24 @@ public class SigninActivity extends AppCompatActivity {
             try {
                 return myApiService.sayHi(params[0]).execute().getData();
             } catch (IOException e) {
+                // Check if it is a HTTP response error
+                if(e instanceof HttpResponseException) {
+                    int statusCode = ((HttpResponseException) e).getStatusCode();
+                    // 404 is not found, so likely the server is down
+                    if (statusCode == 404) {
+                        return "Restaurant Searcher brain is not found (404)";
+                    }
+                }
+                // return the raw message
                 return e.getMessage();
             }
         }
 
+        /**
+         * Method that puts the result of the API on a message.
+         *
+         * @param result is the string output of API
+         */
         @Override
         protected void onPostExecute(String result) {
             Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();

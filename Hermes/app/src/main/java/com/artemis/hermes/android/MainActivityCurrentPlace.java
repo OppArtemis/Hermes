@@ -42,6 +42,11 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+//Firebase database packages
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DatabaseReference;
+
 /**
  * Getting the Location Address.
  *
@@ -272,6 +277,32 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
     }
 
     /**
+     * Helper method to set location on database.
+     *
+     */
+    private void updateLocationInDatabase(){
+        // Instantiate a reference to the database
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        String mUserId = auth.getCurrentUser().getUid();
+        mDatabase.child("users").
+                child(mUserId).
+                child("address").
+                setValue(mCurrentAddressOutput);
+
+        // Store the raw location (latitude and longitude just in case)
+        if (mLastLocation != null) {
+            String locationString = mLastLocation.getLatitude() +
+                    "," + mLastLocation.getLongitude();
+
+            mDatabase.child("users").
+                    child(mUserId).
+                    child("location").
+                    setValue(mCurrentAddressOutput);
+        }
+    }
+
+    /**
      * Toggles the visibility of the progress bar. Enables or disables the Fetch Address button.
      */
     private void updateUIWidgets() {
@@ -282,6 +313,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
         }
 
         displayAddressOutput();
+        updateLocationInDatabase();
     }
 
     /**
