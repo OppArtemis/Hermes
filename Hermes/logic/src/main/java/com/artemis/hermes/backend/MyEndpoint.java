@@ -5,6 +5,7 @@
 */
 
 package com.artemis.hermes.backend;
+import java.util.Random;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
@@ -32,7 +33,24 @@ public class MyEndpoint {
     @ApiMethod(name = "sayHi")
     public MyBean sayHi(@Named("name") String name) {
         MyBean response = new MyBean();
-        response.setData("Hi, " + name + " what would you like to eat?");
+
+        // Generate a random number
+        Random rand = new Random();
+        int dice = rand.nextInt(6) + 1;
+
+        String greetingMessage;
+
+        if (dice == 6) {
+            greetingMessage = "wanna go to McDonald's?";
+        } else if (dice == 5) {
+            greetingMessage = "cooking at home saves money.";
+        } else if (dice == 4) {
+            greetingMessage = "you should go on a diet.";
+        } else {
+            greetingMessage = "what would you like to eat?";
+        }
+
+        response.setData("Hi, " + name + " " + greetingMessage);
 
         return response;
     }
