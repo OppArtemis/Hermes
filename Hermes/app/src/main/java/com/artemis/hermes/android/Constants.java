@@ -1,9 +1,11 @@
 package com.artemis.hermes.android;
 
 /**
- * Created by jf2lin on 09/13/2017.
+ *  Class to store constants.
+ *
+ * @author  Jonathan Lin
+ * @since   2017-09-13
  */
-
 public final class Constants {
     public static final int SUCCESS_RESULT = 0;
     public static final int FAILURE_RESULT = 1;

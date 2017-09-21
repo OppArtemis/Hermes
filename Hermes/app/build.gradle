@@ -59,19 +59,14 @@ dependencies {
 
     // The following client libraries make HTTP/JSON on Android easier.
 
-    // Android extensions for Google HTTP Client.
-    compile('com.google.http-client:google-http-client-android:1.22.0') {
-        exclude(group: 'com.google.android', module: 'android')
-    }
-
     // This is used by the Google HTTP client library.
     compile 'com.google.code.gson:gson:2.7'
-    compile ('com.google.http-client:google-http-client-gson:1.22.0') {
+    compile ("com.google.http-client:google-http-client-gson:$rootProject.ext.googleClientApiVersion") {
         exclude module: 'httpclient'
     }
 
     // Add the Google API client library.
-    compile('com.google.api-client:google-api-client:1.22.0') {
+    compile("com.google.api-client:google-api-client:$rootProject.ext.googleClientApiVersion") {
         // Exclude artifacts that the Android SDK/Runtime provides.
         exclude(group: 'xpp3', module: 'xpp3')
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
@@ -82,10 +77,11 @@ dependencies {
     // Add the Android extensions for the Google API client library.
     // This will automatically include play services as long as you have download that library
     // from the Android SDK manager.
-    // Add the Android extensions for the Google API client library.
-    compile('com.google.api-client:google-api-client-android:1.21.0') {
+    // Includes Google HTTP Client.
+    compile("com.google.api-client:google-api-client-android:$rootProject.ext.googleClientApiVersion") {
         // Exclude play services, since we're not using this yet.
         exclude(group: 'com.google.android.gms:play-services', module: 'google-play-services')
+        exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
 
     // --- UI Stuff ---
