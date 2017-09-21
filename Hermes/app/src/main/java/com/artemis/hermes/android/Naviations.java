@@ -37,6 +37,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -46,6 +52,20 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Map;
 
 /**
  * Getting the Location Address.
@@ -65,8 +85,7 @@ import com.google.firebase.database.DatabaseReference;
  * For an example that shows location updates using the Fused Location Provider API, see
  * https://github.com/googlesamples/android-play-location/tree/master/LocationUpdates.
  */
-public class MainActivityCurrentPlace extends AppCompatActivity {
-
+public class Naviations extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
@@ -94,6 +113,8 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
      * The formatted location address.
      */
     private String mCurrentAddressOutput;
+
+    private String targetAddress = "McDonalds Northfield, Waterloo, Canada";
 
     /**
      * Receiver registered with this activity to get the response from FetchAddressIntentService.
@@ -413,7 +434,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
                         @Override
                         public void onClick(View view) {
                             // Request permission
-                            ActivityCompat.requestPermissions(MainActivityCurrentPlace.this,
+                            ActivityCompat.requestPermissions(Naviations.this,
                                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                                     REQUEST_PERMISSIONS_REQUEST_CODE);
                         }
@@ -424,7 +445,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
             // Request permission. It's possible this can be auto answered if device policy
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
-            ActivityCompat.requestPermissions(MainActivityCurrentPlace.this,
+            ActivityCompat.requestPermissions(Naviations.this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_PERMISSIONS_REQUEST_CODE);
         }
@@ -481,12 +502,102 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
     }
 
     private void startSearchProc() {
-        showSnackbar("Searching: " + mLocationTargetEditText.getText());
+        showSnackbar("Searching at: " + mLocationTargetEditText.getText());
+
+        String googleMapApiKey = Constants.GOOGLE_MAP_API_KEY;
+        String locationType = "restaurant";
+        String targetLocation = targetAddress;
+
+        String mapUrl = "https://maps.googleapis.com/maps/api/place/textsearch/" +
+                "json?key=" + googleMapApiKey +
+                "&query=" + targetLocation +
+                "&type=" + locationType;
+
+//        String mapUrl = "https://raw.githubusercontent.com/ianbar20/JSON-Volley-Tutorial/master/Example-JSON-Files/Example-Object.JSON";
+
+         // This string will hold the results
+        String data = "";
+        // Defining the Volley request queue that handles the URL request concurrently
+        RequestQueue requestQueue;
+
+
+        // Creates the Volley request queue
+        requestQueue = Volley.newRequestQueue(this);
+
+
+        // Creating the JsonObjectRequest class called obreq, passing required parameters:
+        //GET is used to fetch data from the server, JsonURL is the URL to be fetched from.
+        JsonObjectRequest obreq = new JsonObjectRequest(Request.Method.GET, mapUrl,
+                // The third parameter Listener overrides the method onResponse() and passes
+                //JSONObject as a parameter
+                new Response.Listener<JSONObject>() {
+                    // Takes the response from the JSON request
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray obj = response.getJSONArray("results");
+//                            JSONObject obj = response.getJSONObject("colorObject");
+                            // Retrieves the string labeled "colorName" and "description" from
+                            //the response JSON Object
+                            //and converts them into javascript objects
+//                            String color = obj.getString("colorName");
+//                            String desc = obj.getString("description");
+                        }
+                        // Try and catch are included to handle any errors due to JSON
+                        catch (JSONException e) {
+                            // If an error occurs, this prints the error to the log
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                // The final parameter overrides the method onErrorResponse() and passes VolleyError
+                //as a parameter
+                new Response.ErrorListener() {
+                    @Override
+                    // Handles errors that occur due to Volley
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Volley", "Error");
+                    }
+                }
+        );
+        // Adds the JSON object request "obreq" to the request queue
+        requestQueue.add(obreq);
+
+//        URL urlObj = null;
+//        try {
+//            urlObj = new URL(mapUrl);
+//            HttpURLConnection urlConnection = (HttpURLConnection) urlObj.openConnection();
+//            InputStream is = urlConnection.getInputStream();
+//            int status = urlConnection.getResponseCode();
+//
+//            if(status == 200){
+//                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+//                StringBuilder sb = new StringBuilder();
+//
+//                Map<String, Object> jsonMap;
+//                Gson gson = new Gson();
+////                Type outputType = new TypeToken<Map<String, Object>>(){}.getType();
+////                jsonMap = gson.fromJson("here your string", outputType);
+//            }
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        } catch(java.io.IOException e) {
+//            e.printStackTrace();
+//        }
+////        catch (IOException e1) {
+////            e1.printStackTrace();
+////        } catch (org.json.JSONException e2) {
+////            e2.printStackTrace();
+////        }
+
+
     }
+
+
 
     private void navigateToLocation() {
         String sourceLocation = mCurrentAddressOutput;
-        String targetLocation = "McDonalds Northfield, Waterloo, Canada";
+        String targetLocation = targetAddress;
         String transportationMode = "driving";
 
         String mapUrl = "https://www.google.com/maps/dir/?api=1" +

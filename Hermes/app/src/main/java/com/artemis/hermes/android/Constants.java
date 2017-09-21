@@ -14,4 +14,5 @@ public final class Constants {
             ".RESULT_DATA_KEY";
     public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME +
             ".LOCATION_DATA_EXTRA";
+    public static final String GOOGLE_MAP_API_KEY = "AIzaSyDXqh6UpM5_Wv9mHYT5cIn8t7IcnyDKNoc";
 }

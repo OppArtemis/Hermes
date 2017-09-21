@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".SigninActivity" />
-        <activity android:name=".MainActivityCurrentPlace" />
+        <activity android:name=".Naviations" />
         <service
             android:name=".FetchAddressIntentService"
             android:exported="false"/>
