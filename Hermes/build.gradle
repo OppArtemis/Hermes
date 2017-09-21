@@ -29,6 +29,7 @@ allprojects {
 
     ext {
         googleApiVersion = '11.2.2'
+        googleClientApiVersion = '1.22.0'
         backendSdkVersion = '1.9.55'
     }
 }
