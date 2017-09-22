@@ -43,7 +43,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 //Firebase database packages
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
 
@@ -283,10 +282,13 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
     private void updateLocationInDatabase(){
         // Instantiate a reference to the database
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        String mUserId = auth.getCurrentUser().getUid();
+
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
+        String userId = bundle.getString("userId");
+
         mDatabase.child("users").
-                child(mUserId).
+                child(userId).
                 child("address").
                 setValue(mCurrentAddressOutput);
 
@@ -296,7 +298,7 @@ public class MainActivityCurrentPlace extends AppCompatActivity {
                     "," + mLastLocation.getLongitude();
 
             mDatabase.child("users").
-                    child(mUserId).
+                    child(userId).
                     child("location").
                     setValue(locationString);
         }

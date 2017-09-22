@@ -16,4 +16,7 @@ public final class Constants {
             ".RESULT_DATA_KEY";
     public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME +
             ".LOCATION_DATA_EXTRA";
+
+    // URL of the project API
+    public static final String API_ROOT_URL = "https://hermes-c1b9b.appspot.com/_ah/api/";
 }

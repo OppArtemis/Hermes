@@ -223,7 +223,8 @@ public class SigninActivity extends AppCompatActivity {
                 MyApi.Builder builder = new MyApi.Builder(
                         AndroidHttp.newCompatibleTransport(),
                         new GsonFactory(), null)
-                        .setRootUrl("https://hermes-c1b9b.appspot.com/_ah/api/")
+                        .setRootUrl(Constants.API_ROOT_URL)
+                        .setApplicationName("@string/app_name")
                         .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
                             @Override
                             public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
