@@ -35,9 +35,11 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
-
+import com.google.firebase.database.ValueEventListener;
 
 /**
  * SigninActivity class that handles specific activity for users who are signed in,
@@ -49,6 +51,9 @@ import com.google.firebase.database.DatabaseReference;
  * @since   2017-09-03
  */
 public class SigninActivity extends AppCompatActivity {
+
+    // For logging.
+    private static final String TAG = SigninActivity.class.getSimpleName();
 
     // Stores the information of user name to be displayed.
     private TextView profileName;
@@ -82,6 +87,9 @@ public class SigninActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signin);
         setTitle(getString(R.string.profile_title));
         displayLoginUserProfileName();
+
+        // Showcase how to read data from firebase database
+        showDatabaseData();
 
         // Button to logout
         Button logoutButton = (Button)findViewById(R.id.sign_out);
@@ -166,11 +174,43 @@ public class SigninActivity extends AppCompatActivity {
     }
 
     /**
+     * Sample method to read field from database, and display the message with it.
+     *
+     */
+    public void showDatabaseData()
+    {
+        String path = "users" + "/" + mUserId + "/" + "lastLoginTime";
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
+
+        // To read data from firebase database, you will a ValueEventListener
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot)
+            {
+                String loginTime = (String) dataSnapshot.getValue();
+                Log.d(TAG, "Got string from database: " + loginTime);
+
+                String message = "current time is " + loginTime;
+
+                // For fun show this message.
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Do nothing
+            }
+        });
+    }
+
+
+    /**
      * Helper method to start an activity on maps.
      *
      */
     private void goToMap(){
         Intent mapIntent = new Intent(this, MainActivityCurrentPlace.class);
+        mapIntent.putExtra("userId", mUserId);
         startActivity(mapIntent);
         finish();
     }
