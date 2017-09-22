@@ -19,4 +19,7 @@ public final class Constants {
 
     // URL of the project API
     public static final String API_ROOT_URL = "https://hermes-c1b9b.appspot.com/_ah/api/";
+
+    // API KEY
+    public static final String GOOGLE_MAP_API_KEY = "AIzaSyCCQeJONXtw3M4gHT5iFN5oCo-8FpB6sq4";
 }

@@ -26,7 +26,6 @@ import com.artemis.hermes.backend.myApi.MyApi;
 import com.firebase.ui.auth.AuthUI;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
@@ -209,7 +208,7 @@ public class SigninActivity extends AppCompatActivity {
      *
      */
     private void goToMap(){
-        Intent mapIntent = new Intent(this, MainActivityCurrentPlace.class);
+        Intent mapIntent = new Intent(this, Naviations.class);
         mapIntent.putExtra("userId", mUserId);
         startActivity(mapIntent);
         finish();
