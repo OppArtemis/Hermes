@@ -34,8 +34,3 @@ allprojects {
     }
 }
 
-//project(":app") {
-//    dependencies {
-//        compile project(":logic")
-//    }
-//}

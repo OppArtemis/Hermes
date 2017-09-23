@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
@@ -34,11 +33,8 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 
 /**
  * SigninActivity class that handles specific activity for users who are signed in,
@@ -86,9 +82,6 @@ public class SigninActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signin);
         setTitle(getString(R.string.profile_title));
         displayLoginUserProfileName();
-
-        // Showcase how to read data from firebase database
-        showDatabaseData();
 
         // Button to logout
         Button logoutButton = (Button)findViewById(R.id.sign_out);
@@ -168,40 +161,11 @@ public class SigninActivity extends AppCompatActivity {
             profileName.setText(TextUtils.isEmpty(mUser.getDisplayName())? "No name found" : mUser.getDisplayName());
 
             // Play with endpoints
-            new EndpointsAsyncTask().execute(mUser.getDisplayName());
+            new EndpointsSayHi().execute(mUser.getDisplayName());
+
+            new EndpointsReadDatabaseData().execute(mUserId);
         }
     }
-
-    /**
-     * Sample method to read field from database, and display the message with it.
-     *
-     */
-    public void showDatabaseData()
-    {
-        String path = "users" + "/" + mUserId + "/" + "lastLoginTime";
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference(path);
-
-        // To read data from firebase database, you will a ValueEventListener
-        ref.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot)
-            {
-                String loginTime = (String) dataSnapshot.getValue();
-                Log.d(TAG, "Got string from database: " + loginTime);
-
-                String message = "current time is " + loginTime;
-
-                // For fun show this message.
-                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Do nothing
-            }
-        });
-    }
-
 
     /**
      * Helper method to start an activity on maps.
@@ -239,13 +203,13 @@ public class SigninActivity extends AppCompatActivity {
     }
 
     /**
-     * EndpointsAsyncTask class that talks to the backend logic endpoints
+     * EndpointsSayHi class that talks to the backend logic endpoints
      * which returns a messsage to the user.
      *
      * @author  Jorge Quan
      * @since   2017-09-14
      */
-    private class EndpointsAsyncTask extends AsyncTask<String, Void, String> {
+    private class EndpointsSayHi extends AsyncTask<String, Void, String> {
         private MyApi myApiService = null;
 
         /**
@@ -301,6 +265,70 @@ public class SigninActivity extends AppCompatActivity {
 
             TextView customMessage = (TextView) findViewById(R.id.custom_message);
             customMessage.setText(result);
+        }
+    }
+
+
+    /**
+     * EndpointsReadDatabaseData class that talks to the backend logic endpoints
+     * which returns a messsage to the user.
+     *
+     * @author  Jorge Quan
+     * @since   2017-09-14
+     */
+    private class EndpointsReadDatabaseData extends AsyncTask<String, Void, String> {
+        private MyApi myApiService = null;
+
+        /**
+         * Method that performs the call to the API
+         *
+         * @param params to enter as input for API
+         *
+         * @return data of the API
+         */
+        @Override
+        protected String doInBackground(String... params) {
+
+            if (myApiService == null) {  // Only do this once
+                MyApi.Builder builder = new MyApi.Builder(
+                        AndroidHttp.newCompatibleTransport(),
+                        new GsonFactory(), null)
+                        .setRootUrl(Constants.API_ROOT_URL)
+                        .setApplicationName("@string/app_name")
+                        .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
+                            @Override
+                            public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
+                                abstractGoogleClientRequest.setDisableGZipContent(true);
+                            }
+                        });
+
+                myApiService = builder.build();
+            }
+
+            try {
+                return myApiService.getDatabaseInfo(params[0]).execute().getData();
+            } catch (IOException e) {
+                // Check if it is a HTTP response error
+                if(e instanceof HttpResponseException) {
+                    int statusCode = ((HttpResponseException) e).getStatusCode();
+                    // 404 is not found, so likely the server is down
+                    if (statusCode == 404) {
+                        return "Restaurant Searcher brain is not found (404)";
+                    }
+                }
+                // return the raw message
+                return e.getMessage();
+            }
+        }
+
+        /**
+         * Method that puts the result of the API on a message.
+         *
+         * @param result is the string output of API
+         */
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
         }
     }
 }
