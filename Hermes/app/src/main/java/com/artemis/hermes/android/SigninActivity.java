@@ -246,7 +246,7 @@ public class SigninActivity extends AppCompatActivity {
                     int statusCode = ((HttpResponseException) e).getStatusCode();
                     // 404 is not found, so likely the server is down
                     if (statusCode == 404) {
-                        return "com.artemis.hermes.android.Restaurant Searcher brain is not found (404)";
+                        return "Restaurant Searcher brain is not found (404)";
                     }
                 }
                 // return the raw message

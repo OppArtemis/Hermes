@@ -56,28 +56,19 @@ import com.google.android.gms.tasks.OnSuccessListener;
 //Firebase database packages
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
-import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Getting the Location Address.
  *
  * Demonstrates how to use the {@link android.location.Geocoder} API and reverse geocoding to
- * display a device's location as an address_full. Uses an IntentService to fetch the location address_full,
+ * display a device's location as an address. Uses an IntentService to fetch the location address,
  * and a ResultReceiver to process results sent by the IntentService.
  *
  * Android has two location request settings:
@@ -96,8 +87,8 @@ public class Naviations extends AppCompatActivity {
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
 
-    private static final String ADDRESS_REQUESTED_KEY = "address_full-request-pending";
-    private static final String LOCATION_ADDRESS_KEY = "location-address_full";
+    private static final String ADDRESS_REQUESTED_KEY = "address-request-pending";
+    private static final String LOCATION_ADDRESS_KEY = "location-address";
 
     /**
      * Provides access to the Fused Location Provider API.
@@ -110,8 +101,8 @@ public class Naviations extends AppCompatActivity {
     private Location mLastLocation;
 
     /**
-     * Tracks whether the user has requested an address_full. Becomes true when the user requests an
-     * address_full and false when the address_full (or an error message) is delivered.
+     * Tracks whether the user has requested an address. Becomes true when the user requests an
+     * address and false when the address (or an error message) is delivered.
      */
     private boolean mAddressRequested;
 
@@ -122,7 +113,7 @@ public class Naviations extends AppCompatActivity {
 
     private String targetAddress = "55 Northfield, Waterloo, Canada";
 
-    private List<Restaurant> foundLocations;
+    private List<RestaurantHandle> foundLocations;
 
     /**
      * Receiver registered with this activity to get the response from FetchAddressIntentService.
@@ -130,12 +121,12 @@ public class Naviations extends AppCompatActivity {
     private AddressResultReceiver mResultReceiver;
 
     /**
-     * Displays the location address_full.
+     * Displays the location address.
      */
     private TextView mLocationAddressTextView;
 
     /**
-     * Kicks off the request to fetch an address_full when pressed.
+     * Kicks off the request to fetch an address when pressed.
      */
     private Button mFetchAddressButton;
 
@@ -231,12 +222,12 @@ public class Naviations extends AppCompatActivity {
      */
     private void updateValuesFromBundle(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            // Check savedInstanceState to see if the address_full was previously requested.
+            // Check savedInstanceState to see if the address was previously requested.
             if (savedInstanceState.keySet().contains(ADDRESS_REQUESTED_KEY)) {
                 mAddressRequested = savedInstanceState.getBoolean(ADDRESS_REQUESTED_KEY);
             }
-            // Check savedInstanceState to see if the location address_full string was previously found
-            // and stored in the Bundle. If it was found, display the address_full string in the UI.
+            // Check savedInstanceState to see if the location address string was previously found
+            // and stored in the Bundle. If it was found, display the address string in the UI.
             if (savedInstanceState.keySet().contains(LOCATION_ADDRESS_KEY)) {
                 mCurrentAddressOutput = savedInstanceState.getString(LOCATION_ADDRESS_KEY);
                 displayAddressOutput();
@@ -256,17 +247,17 @@ public class Naviations extends AppCompatActivity {
 
         // If we have not yet retrieved the user location, we process the user's request by setting
         // mAddressRequested to true. As far as the user is concerned, pressing the Fetch Address button
-        // immediately kicks off the process of getting the address_full.
+        // immediately kicks off the process of getting the address.
         mAddressRequested = true;
         updateUIWidgets();
     }
 
     /**
      * Creates an intent, adds location data to it as an extra, and starts the intent service for
-     * fetching an address_full.
+     * fetching an address.
      */
     private void startIntentService() {
-        // Create an intent for passing to the intent service responsible for fetching the address_full.
+        // Create an intent for passing to the intent service responsible for fetching the address.
         Intent intent = new Intent(this, FetchAddressIntentService.class);
 
         // Pass the result receiver as an extra to the service.
@@ -282,7 +273,7 @@ public class Naviations extends AppCompatActivity {
     }
 
     /**
-     * Gets the address_full for the last known location.
+     * Gets the address for the last known location.
      */
     @SuppressWarnings("MissingPermission")
     private void getAddress() {
@@ -303,7 +294,7 @@ public class Naviations extends AppCompatActivity {
                             return;
                         }
 
-                        // If the user pressed the fetch address_full button before we had the location,
+                        // If the user pressed the fetch address button before we had the location,
                         // this will be set to true indicating that we should kick off the intent
                         // service after fetching the location.
                         if (mAddressRequested) {
@@ -320,7 +311,7 @@ public class Naviations extends AppCompatActivity {
     }
 
     /**
-     * Updates the address_full in the UI.
+     * Updates the address in the UI.
      */
     private void displayAddressOutput() {
         String outputStr = getString(R.string.current_location_start) + " " + mCurrentAddressOutput;
@@ -341,7 +332,7 @@ public class Naviations extends AppCompatActivity {
 
         mDatabase.child("users").
                 child(userId).
-                child("address_full").
+                child("address").
                 setValue(mCurrentAddressOutput);
 
         // Store the raw location (latitude and longitude just in case)
@@ -379,10 +370,10 @@ public class Naviations extends AppCompatActivity {
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        // Save whether the address_full has been requested.
+        // Save whether the address has been requested.
         savedInstanceState.putBoolean(ADDRESS_REQUESTED_KEY, mAddressRequested);
 
-        // Save the address_full string.
+        // Save the address string.
         savedInstanceState.putString(LOCATION_ADDRESS_KEY, mCurrentAddressOutput);
         super.onSaveInstanceState(savedInstanceState);
     }
@@ -401,11 +392,11 @@ public class Naviations extends AppCompatActivity {
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData) {
 
-            // Display the address_full string or an error message sent from the intent service.
+            // Display the address string or an error message sent from the intent service.
             mCurrentAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
             displayAddressOutput();
 
-            // Show a toast message if an address_full was found.
+            // Show a toast message if an address was found.
             if (resultCode == Constants.SUCCESS_RESULT) {
                 showToast(getString(R.string.address_found));
             }
@@ -586,7 +577,7 @@ public class Naviations extends AppCompatActivity {
                             foundLocations = new ArrayList<>();
                             for (int i = 0; i < jsonResponseArray.length(); i++) {
                                 JSONObject currResponse = jsonResponseArray.getJSONObject(i);
-                                foundLocations.add(new Restaurant(currResponse));
+                                foundLocations.add(new RestaurantHandle(currResponse));
 
                                 adapter.add(foundLocations.get(i).toString());
                             }

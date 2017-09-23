@@ -7,14 +7,14 @@ import org.json.JSONObject;
  * Created by jf2lin on 09/23/2017.
  */
 
-public class Restaurant {
+public class RestaurantHandle {
     String name;
     String address_full;
     String address_short;
 //    String openNow;
     String rating;
 
-    Restaurant(JSONObject jsonResult) {
+    RestaurantHandle(JSONObject jsonResult) {
         try {
             this.name = jsonResult.getString("name");
             this.address_full = jsonResult.getString("formatted_address");

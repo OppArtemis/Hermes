@@ -108,7 +108,7 @@ public class MyEndpoint {
         // Fetch the service account key JSON file contents for authentication
         FileInputStream serviceAccount = null;
         try {
-            serviceAccount = new FileInputStream("WEB-INF/Hermes com.artemis.hermes.android.Restaurant Search-408023883e26.json");
+            serviceAccount = new FileInputStream("WEB-INF/Hermes Restaurant Search-408023883e26.json");
         }  catch (FileNotFoundException e) {
             e.printStackTrace();
         }
