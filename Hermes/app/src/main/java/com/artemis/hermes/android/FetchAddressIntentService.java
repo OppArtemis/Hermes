@@ -21,7 +21,7 @@ import java.util.Locale;
 
 /**
  * Asynchronously handles an intent using a worker thread. Receives a ResultReceiver object and a
- * location through an intent. Tries to fetch the address for the location using a Geocoder, and
+ * location through an intent. Tries to fetch the address_full for the location using a Geocoder, and
  * sends the result to the ResultReceiver.
  */
 public class FetchAddressIntentService extends IntentService {
@@ -42,7 +42,7 @@ public class FetchAddressIntentService extends IntentService {
     }
 
     /**
-     * Tries to get the location address using a Geocoder. If successful, sends an address to a
+     * Tries to get the location address_full using a Geocoder. If successful, sends an address_full to a
      * result receiver. If unsuccessful, sends an error message instead.
      * Note: We define a {@link android.os.ResultReceiver} in * MainActivity to process content
      * sent from this service.
@@ -76,8 +76,8 @@ public class FetchAddressIntentService extends IntentService {
 
         // Errors could still arise from using the Geocoder (for example, if there is no
         // connectivity, or if the Geocoder is given illegal location data). Or, the Geocoder may
-        // simply not have an address for a location. In all these cases, we communicate with the
-        // receiver using a resultCode indicating failure. If an address is found, we use a
+        // simply not have an address_full for a location. In all these cases, we communicate with the
+        // receiver using a resultCode indicating failure. If an address_full is found, we use a
         // resultCode indicating success.
 
         // The Geocoder used in this sample. The Geocoder's responses are localized for the given
@@ -96,7 +96,7 @@ public class FetchAddressIntentService extends IntentService {
             addresses = geocoder.getFromLocation(
                     location.getLatitude(),
                     location.getLongitude(),
-                    // In this sample, we get just a single address.
+                    // In this sample, we get just a single address_full.
                     1);
         } catch (IOException ioException) {
             // Catch network or other I/O problems.
@@ -110,7 +110,7 @@ public class FetchAddressIntentService extends IntentService {
                     ", Longitude = " + location.getLongitude(), illegalArgumentException);
         }
 
-        // Handle case where no address was found.
+        // Handle case where no address_full was found.
         if (addresses == null || addresses.size()  == 0) {
             if (errorMessage.isEmpty()) {
                 errorMessage = getString(R.string.no_address_found);
@@ -121,9 +121,9 @@ public class FetchAddressIntentService extends IntentService {
             Address address = addresses.get(0);
             ArrayList<String> addressFragments = new ArrayList<>();
 
-            // Fetch the address lines using {@code getAddressLine},
-            // join them, and send them to the thread. The {@link android.location.address}
-            // class provides other options for fetching address details that you may prefer
+            // Fetch the address_full lines using {@code getAddressLine},
+            // join them, and send them to the thread. The {@link android.location.address_full}
+            // class provides other options for fetching address_full details that you may prefer
             // to use. Here are some examples:
             // getLocality() ("Mountain View", for example)
             // getAdminArea() ("CA", for example)

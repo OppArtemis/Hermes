@@ -10,6 +10,6 @@
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties" />
     </system-properties>
     <resource-files>
-        <include path="/Hermes Restaurant Search-408023883e26.json" />
+        <include path="/Hermes com.artemis.hermes.android.Restaurant Search-408023883e26.json" />
     </resource-files>
 </appengine-web-app>
