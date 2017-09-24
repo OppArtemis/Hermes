@@ -41,6 +41,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.AsyncTask;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -57,12 +58,26 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
 
+
+// Required for Yelp API
+import retrofit2.Call;
+import retrofit2.Callback;
+import com.yelp.fusion.client.connection.YelpFusionApi;
+import com.yelp.fusion.client.connection.YelpFusionApiFactory;
+import com.yelp.fusion.client.models.Business;
+import com.yelp.fusion.client.models.Category;
+import com.yelp.fusion.client.models.SearchResponse;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 
 /**
  * Getting the Location Address.
@@ -134,8 +149,12 @@ public class Naviations extends AppCompatActivity {
     private Button mCopyCurrentLocationButton;
     private Button mStartSearch;
     private Button mNavigate;
+    private Button mYelpButton;
     private ListView mRetrievedRestaurants;
     private ArrayAdapter<String> adapter;
+
+    // Yelp client API object
+    private YelpFusionApi mYelpFusionApi;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -150,6 +169,7 @@ public class Naviations extends AppCompatActivity {
         mCopyCurrentLocationButton = (Button) findViewById(R.id.copy_current_location);
         mStartSearch = (Button) findViewById(R.id.button_startSearch);
         mNavigate = (Button) findViewById(R.id.button_navigate);
+        mYelpButton = findViewById(R.id.yelpButton);
 
         mRetrievedRestaurants = (ListView) findViewById(R.id.list_retrievedRestaurants);
 
@@ -180,6 +200,13 @@ public class Naviations extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 copyCurrentLocationToTargetLocation();
+            }
+        });
+
+        mYelpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startSearchWithYelp();
             }
         });
 
@@ -525,6 +552,103 @@ public class Naviations extends AppCompatActivity {
         mLocationTargetEditText.setText(mCurrentAddressOutput);
     }
 
+    private void startSearchWithYelp(){
+
+        // hide software keyboard
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                InputMethodManager.RESULT_UNCHANGED_SHOWN);
+
+        String targetAddressFieldStr = mLocationTargetEditText.getText().toString();
+        if (targetAddressFieldStr.length() > 0) {
+            targetAddress = targetAddressFieldStr;
+        }
+
+        // Need to instantiate API
+        if (mYelpFusionApi == null) {
+            // Need to figure out how to poll
+            new InitiateYelpApi().execute();
+        }
+
+        if (mYelpFusionApi != null) {
+
+            Map<String, String> params = new HashMap<>();
+
+            // Enter filter on search.
+            // Limit the radius to 5km.
+            params.put("term", "Restaurants");
+            params.put("radius", "5000");
+            params.put("sort_by", "rating");
+
+            // Use the target location from the address field as a first option.
+            if (targetAddress != null) {
+                params.put("location", targetAddress);
+            } else if (mLastLocation != null) {
+                params.put("latitude", String.valueOf(mLastLocation.getLatitude()));
+                params.put("longitude", String.valueOf(mLastLocation.getLongitude()));
+            } else if (mCurrentAddressOutput != null) {
+                params.put("location", mCurrentAddressOutput);
+            } else {
+                // default location
+                params.put("location", "200 University Ave West, Waterloo");
+            }
+
+            Call<SearchResponse> call = mYelpFusionApi.getBusinessSearch(params);
+
+            // Need a callback to make the call asynchronous
+            Callback<SearchResponse> callback = new Callback<SearchResponse>() {
+                @Override
+                public void onResponse(Call<SearchResponse> call,
+                                       retrofit2.Response<SearchResponse> response) {
+                    if (response.isSuccessful()) {
+
+                        // Clear the default list of info.
+                        adapter.clear();
+
+                        // Get all the businesses from response.
+                        SearchResponse searchResponse = response.body();
+                        ArrayList<Business> businesses = searchResponse.getBusinesses();
+
+                        // Iterate through each restaurant, and get information from each.
+                        for (int i = 0; i < businesses.size(); i++) {
+                            String businessName = businesses.get(i).getName();
+
+                            com.yelp.fusion.client.models.Location businessLocation =
+                                    businesses.get(i).getLocation();
+                            String businessAddress = businessLocation.getAddress1();
+
+                            Double rating = businesses.get(i).getRating();
+
+                            // Iterate through each category to get the "alias", which are
+                            // tag that identifies a restaurant (e.g. cuisine, cafe, etc)
+                            ArrayList<Category> categories = businesses.get(i).getCategories();
+                            String categoriesInStr = "";
+                            for (int j = 0; j < categories.size(); j++){
+                                Category currentCategory = categories.get(j);
+                                categoriesInStr = categoriesInStr + currentCategory.getAlias() + "|";
+                            }
+
+                            String entry =
+                                    businessName + ", " + businessAddress + ", " +
+                                            categoriesInStr + ", " + rating;
+                            adapter.add(entry);
+                        }
+                    } else {
+                        adapter.add("HTTP Response was not successful: " + response.code());
+                    }
+                }
+                @Override
+                public void onFailure(Call<SearchResponse> call, Throwable t) {
+                    // HTTP error happened, do something to handle it.
+                    adapter.add("Cannot find restaurants due to HTTP error");
+                    Log.d(TAG, "Failure on Yelp Search API:\n" + t.toString());
+                }
+            };
+
+            call.enqueue(callback);
+        }
+    }
+
     private void startSearchProc() {
         // hide software keyboard
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -617,4 +741,49 @@ public class Naviations extends AppCompatActivity {
         Intent mapIntent = new Intent(Intent.ACTION_VIEW, location);
         startActivity(mapIntent);
     }
+
+    /**
+     * InitiateYelpApi class that initiates Yelp API
+     *
+     * @author  Jorge Quan
+     * @since   2017-09-34
+     */
+    private class InitiateYelpApi extends AsyncTask<String, Void, String> {
+
+        /**
+         * Method that performs the call to the API
+         *
+         * @param params to enter as input for API
+         *
+         * @return data of the API
+         */
+        @Override
+        protected String doInBackground(String... params) {
+
+            // Authenticate and use API
+            String appId = getString(R.string.yelp_api_id);
+            String appSecret = getString(R.string.yelp_api_secret);
+            YelpFusionApiFactory apiFactory = new YelpFusionApiFactory();
+
+            try {
+                mYelpFusionApi = apiFactory.createAPI(appId, appSecret);
+            } catch (IOException e){
+                e.printStackTrace();
+                return "Bad";
+            }
+
+            return "Good";
+        }
+
+        /**
+         * Post execute after API call.
+         *
+         * @param result is the string output of API
+         */
+        @Override
+        protected void onPostExecute(String result) {
+            Log.d(TAG, "Result of instantiating Yelp client API: " + result);
+        }
+    }
+
 }
