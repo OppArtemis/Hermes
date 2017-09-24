@@ -22,7 +22,6 @@ import java.util.Locale;
 /**
  * Asynchronously handles an intent using a worker thread. Receives a ResultReceiver object and a
  * location through an intent. Tries to fetch the address for the location using a Geocoder, and
- * location through an intent. Tries to fetch the address_full for the location using a Geocoder, and
  * sends the result to the ResultReceiver.
  */
 public class FetchAddressIntentService extends IntentService {

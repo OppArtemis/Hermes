@@ -65,7 +65,7 @@ public class MyEndpoint {
             greetingMessage = "what would you like to eat?";
         }
 
-        response.setData("Hi, " + name + " " + greetingMessage);
+        response.setData("Hi, " + name + ", " + greetingMessage);
         return response;
     }
 

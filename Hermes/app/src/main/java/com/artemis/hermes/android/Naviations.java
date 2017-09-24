@@ -107,7 +107,7 @@ public class Naviations extends AppCompatActivity {
     private boolean mAddressRequested;
 
     /**
-     * The formatted location address_full.
+     * The formatted location address.
      */
     private String mCurrentAddressOutput;
 
