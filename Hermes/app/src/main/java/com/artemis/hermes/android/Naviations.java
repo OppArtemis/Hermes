@@ -541,7 +541,7 @@ public class Naviations extends AppCompatActivity {
 
         showSnackbar("Searching at: " + mLocationTargetEditText.getText());
 
-        String googleMapApiKey = Constants.GOOGLE_MAP_API_KEY;
+        String googleMapApiKey = getString(R.string.google_maps_api_key);
         String locationType = "restaurant";
         String targetLocation = targetAddress;
 
