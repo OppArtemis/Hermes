@@ -84,7 +84,7 @@ public class SigninActivity extends AppCompatActivity {
         displayLoginUserProfileName();
 
         // Button to logout
-        Button logoutButton = (Button)findViewById(R.id.sign_out);
+        Button logoutButton = findViewById(R.id.sign_out);
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -104,7 +104,7 @@ public class SigninActivity extends AppCompatActivity {
         });
 
         // Button to delete user
-        Button deleteUserButton = (Button)findViewById(R.id.delete_user);
+        Button deleteUserButton = findViewById(R.id.delete_user);
         deleteUserButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -122,7 +122,7 @@ public class SigninActivity extends AppCompatActivity {
         });
 
         // Button to update user's location
-        Button showMapButton = (Button)findViewById(R.id.view_map);
+        Button showMapButton = findViewById(R.id.view_map);
         showMapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -156,7 +156,7 @@ public class SigninActivity extends AppCompatActivity {
      */
     private void displayLoginUserProfileName(){
         FirebaseUser mUser = auth.getCurrentUser();
-        profileName = (TextView)findViewById(R.id.user_name);
+        profileName = findViewById(R.id.user_name);
         if(mUser != null){
             profileName.setText(TextUtils.isEmpty(mUser.getDisplayName())? "No name found" : mUser.getDisplayName());
 
@@ -263,7 +263,7 @@ public class SigninActivity extends AppCompatActivity {
         protected void onPostExecute(String result) {
             Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
 
-            TextView customMessage = (TextView) findViewById(R.id.custom_message);
+            TextView customMessage = findViewById(R.id.custom_message);
             customMessage.setText(result);
         }
     }
@@ -313,7 +313,7 @@ public class SigninActivity extends AppCompatActivity {
                     int statusCode = ((HttpResponseException) e).getStatusCode();
                     // 404 is not found, so likely the server is down
                     if (statusCode == 404) {
-                        return "com.artemis.hermes.android.Restaurant Searcher brain is not found (404)";
+                        return "Restaurant Searcher brain is not found (404)";
                     }
                 }
                 // return the raw message
