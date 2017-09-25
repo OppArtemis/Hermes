@@ -77,6 +77,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -566,10 +567,19 @@ public class Naviations extends AppCompatActivity {
 
         // Need to instantiate API
         if (mYelpFusionApi == null) {
-            // Need to figure out how to poll
-            new InitiateYelpApi().execute();
+
+            InitiateYelpApi initiateYelpApiObj = new InitiateYelpApi();
+            initiateYelpApiObj.execute();
+
+            // Try polling for asynch task to finish
+            try {
+                initiateYelpApiObj.get(3000, TimeUnit.MILLISECONDS);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
+        // This value will not be null if the instantiation worked.
         if (mYelpFusionApi != null) {
 
             Map<String, String> params = new HashMap<>();
@@ -578,7 +588,7 @@ public class Naviations extends AppCompatActivity {
             // Limit the radius to 5km.
             params.put("term", "Restaurants");
             params.put("radius", "5000");
-            params.put("sort_by", "rating");
+            params.put("sort_by", "distance");
 
             // Use the target location from the address field as a first option.
             if (targetAddress != null) {

@@ -12,7 +12,6 @@
     <string name="location_info">myLocation</string>
     <string name="custom_message">myMessage</string>
     <string name="logout">LOGOUT</string>
-    <string name="delete_user">DELETE USER</string>
     <string name="update_location">Update Current</string>
     <string name="copy_current">Copy Current</string>
     <string name="sign_out_error">Failed to sign out</string>

@@ -54,15 +54,6 @@
             android:textColor="@color/colorWhite"
             android:layout_marginRight="3dp"
             android:layout_weight="1"/>
-        <Button
-            android:id="@+id/delete_user"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="@color/colorSlateBlue"
-            android:text="@string/delete_user"
-            android:textColor="@color/colorWhite"
-            android:layout_marginLeft="3dp"
-            android:layout_weight="1"/>
     </LinearLayout>
 
     <TextView
