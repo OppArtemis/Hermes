@@ -123,13 +123,13 @@ public class Naviations extends AppCompatActivity {
     private boolean mAddressRequested;
 
     /**
-     * The formatted location address_full.
+     * The formatted location addressFull.
      */
     private String mCurrentAddressOutput;
 
     private String targetAddress = "55 Northfield, Waterloo, Canada";
 
-    private List<RestaurantHandle> foundLocations;
+    private List<RestaurantGoogleHandle> foundLocations;
 
     /**
      * Receiver registered with this activity to get the response from FetchAddressIntentService.
@@ -214,7 +214,7 @@ public class Naviations extends AppCompatActivity {
         mStartSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startSearchProc();
+                startSearchWithGoogle();
             }
         });
 
@@ -229,7 +229,11 @@ public class Naviations extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String polledString = String.valueOf(adapterView.getItemAtPosition(i));
-                navigateToLocation(polledString);
+
+                // In the event that there is "|" separators, we just need the first index of the
+                // string for the address
+                String [] polledStringSplit = polledString.split("\\|");
+                navigateToLocation(polledStringSplit[0]);
             }
         });
     }
@@ -553,19 +557,19 @@ public class Naviations extends AppCompatActivity {
         mLocationTargetEditText.setText(mCurrentAddressOutput);
     }
 
-    private void startSearchWithYelp(){
-
-        // hide software keyboard
+    /**
+     * Hides software keyboard.
+     */
+    private void hideSoftwareKeyboard() {
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
                 InputMethodManager.RESULT_UNCHANGED_SHOWN);
+    }
 
-        String targetAddressFieldStr = mLocationTargetEditText.getText().toString();
-        if (targetAddressFieldStr.length() > 0) {
-            targetAddress = targetAddressFieldStr;
-        }
-
-        // Need to instantiate API
+    /**
+     * Instantiates the Yelp client API.
+     */
+    private void instantiateYelpApi(){
         if (mYelpFusionApi == null) {
 
             InitiateYelpApi initiateYelpApiObj = new InitiateYelpApi();
@@ -578,6 +582,25 @@ public class Naviations extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Method to search for restaurants with Yelp API.
+     *
+     * It will set the adapter with search results.
+     *
+     */
+    private void startSearchWithYelp(){
+        hideSoftwareKeyboard();
+
+        String targetAddressFieldStr = mLocationTargetEditText.getText().toString();
+        if (targetAddressFieldStr.length() > 0) {
+            targetAddress = targetAddressFieldStr;
+        } else {
+            targetAddress = mCurrentAddressOutput;
+        }
+
+        instantiateYelpApi();
 
         // This value will not be null if the instantiation worked.
         if (mYelpFusionApi != null) {
@@ -585,22 +608,21 @@ public class Naviations extends AppCompatActivity {
             Map<String, String> params = new HashMap<>();
 
             // Enter filter on search.
-            // Limit the radius to 5km.
+            // Limit the radius to 4km.
             params.put("term", "Restaurants");
-            params.put("radius", "5000");
+            params.put("radius", "4000");
             params.put("sort_by", "distance");
 
             // Use the target location from the address field as a first option.
             if (targetAddress != null) {
                 params.put("location", targetAddress);
+                showSnackbar("Searching at: " + targetAddress);
             } else if (mLastLocation != null) {
-                params.put("latitude", String.valueOf(mLastLocation.getLatitude()));
-                params.put("longitude", String.valueOf(mLastLocation.getLongitude()));
-            } else if (mCurrentAddressOutput != null) {
-                params.put("location", mCurrentAddressOutput);
-            } else {
-                // default location
-                params.put("location", "200 University Ave West, Waterloo");
+                String latitude = String.valueOf(mLastLocation.getLatitude());
+                String longitude = String.valueOf(mLastLocation.getLongitude());
+                params.put("latitude", latitude);
+                params.put("longitude", longitude);
+                showSnackbar("Searching at: " + latitude + ", " + longitude);
             }
 
             Call<SearchResponse> call = mYelpFusionApi.getBusinessSearch(params);
@@ -619,29 +641,13 @@ public class Naviations extends AppCompatActivity {
                         SearchResponse searchResponse = response.body();
                         ArrayList<Business> businesses = searchResponse.getBusinesses();
 
+                        ArrayList<RestaurantYelpHandle> restaurantObjects = new ArrayList<>();
+
                         // Iterate through each restaurant, and get information from each.
                         for (int i = 0; i < businesses.size(); i++) {
-                            String businessName = businesses.get(i).getName();
 
-                            com.yelp.fusion.client.models.Location businessLocation =
-                                    businesses.get(i).getLocation();
-                            String businessAddress = businessLocation.getAddress1();
-
-                            Double rating = businesses.get(i).getRating();
-
-                            // Iterate through each category to get the "alias", which are
-                            // tag that identifies a restaurant (e.g. cuisine, cafe, etc)
-                            ArrayList<Category> categories = businesses.get(i).getCategories();
-                            String categoriesInStr = "";
-                            for (int j = 0; j < categories.size(); j++){
-                                Category currentCategory = categories.get(j);
-                                categoriesInStr = categoriesInStr + currentCategory.getAlias() + "|";
-                            }
-
-                            String entry =
-                                    businessName + ", " + businessAddress + ", " +
-                                            categoriesInStr + ", " + rating;
-                            adapter.add(entry);
+                            restaurantObjects.add(new RestaurantYelpHandle(businesses.get(i)));
+                            adapter.add(restaurantObjects.get(i).toString());
                         }
                     } else {
                         adapter.add("HTTP Response was not successful: " + response.code());
@@ -659,21 +665,27 @@ public class Naviations extends AppCompatActivity {
         }
     }
 
-    private void startSearchProc() {
-        // hide software keyboard
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
-                InputMethodManager.RESULT_UNCHANGED_SHOWN);
+    /**
+     * Method to search for restaurants with Google API.
+     *
+     * It will set the adapter with search results.
+     *
+     */
+    private void startSearchWithGoogle() {
+        hideSoftwareKeyboard();
 
         // check input address to make sure there's something
         String targetAddressFieldStr = mLocationTargetEditText.getText().toString();
         if (targetAddressFieldStr.length() > 0) {
             targetAddress = targetAddressFieldStr;
+        } else if (mLastLocation != null) {
+            targetAddress = String.valueOf(mLastLocation.getLatitude()) + ", " +
+                    String.valueOf(mLastLocation.getLongitude());
         } else {
-
+            targetAddress = mCurrentAddressOutput;
         }
 
-        showSnackbar("Searching at: " + mLocationTargetEditText.getText());
+        showSnackbar("Searching at: " + targetAddress);
 
         String googleMapApiKey = getString(R.string.google_maps_api_key);
         String locationType = "restaurant";
@@ -684,8 +696,6 @@ public class Naviations extends AppCompatActivity {
                 "&query=" + targetLocation.replace(" ", "+") +
                 "&type=" + locationType;
 
-         // This string will hold the results
-        String data = "";
         // Defining the Volley request queue that handles the URL request concurrently
         RequestQueue requestQueue;
 
@@ -711,7 +721,7 @@ public class Naviations extends AppCompatActivity {
                             foundLocations = new ArrayList<>();
                             for (int i = 0; i < jsonResponseArray.length(); i++) {
                                 JSONObject currResponse = jsonResponseArray.getJSONObject(i);
-                                foundLocations.add(new RestaurantHandle(currResponse));
+                                foundLocations.add(new RestaurantGoogleHandle(currResponse));
 
                                 adapter.add(foundLocations.get(i).toString());
                             }
