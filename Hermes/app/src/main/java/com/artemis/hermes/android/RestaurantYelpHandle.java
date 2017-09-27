@@ -1,5 +1,6 @@
 package com.artemis.hermes.android;
 
+import com.google.common.base.Joiner;
 import com.yelp.fusion.client.models.Business;
 import com.yelp.fusion.client.models.Category;
 
@@ -44,7 +45,13 @@ public class RestaurantYelpHandle implements RestaurantBase {
     }
 
     public String toString() {
-        return this.getName() + " (" + this.getAddress() + ") " + "|" + this.getRating();
+        return this.getName() + " (" + this.getAddress() + ") " + "| " + this.getRating();
+    }
+
+    public String toFullString() {
+        return this.getName() + " (" + this.getAddress() + ") " +
+                "| " + this.getRating() +
+                "| " + Joiner.on(",").join(this.getCategories());
     }
 
     // ---- Getters -----
@@ -54,7 +61,11 @@ public class RestaurantYelpHandle implements RestaurantBase {
     }
 
     public String getAddress(){
-        return this.addressFull;
+        if (this.addressFull != null) {
+            return this.addressFull;
+        } else {
+            return "";
+        }
     }
 
     public double getRating() {

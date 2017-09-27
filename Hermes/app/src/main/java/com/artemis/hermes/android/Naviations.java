@@ -609,6 +609,8 @@ public class Naviations extends AppCompatActivity {
 
             // Enter filter on search.
             // Limit the radius to 4km.
+            // To do: if 4km radius returns less than a threshold number of restaurants, then
+            // the program should be smart to search a larger radius.
             params.put("term", "Restaurants");
             params.put("radius", "4000");
             params.put("sort_by", "distance");
@@ -647,7 +649,7 @@ public class Naviations extends AppCompatActivity {
                         for (int i = 0; i < businesses.size(); i++) {
 
                             restaurantObjects.add(new RestaurantYelpHandle(businesses.get(i)));
-                            adapter.add(restaurantObjects.get(i).toString());
+                            adapter.add(restaurantObjects.get(i).toFullString());
                         }
                     } else {
                         adapter.add("HTTP Response was not successful: " + response.code());
