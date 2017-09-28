@@ -12,8 +12,7 @@
     <string name="location_info">myLocation</string>
     <string name="custom_message">myMessage</string>
     <string name="logout">LOGOUT</string>
-    <string name="update_location">Update Current</string>
-    <string name="copy_current">Copy Current</string>
+    <string name="update_location">Current Location</string>
     <string name="sign_out_error">Failed to sign out</string>
     <string name="user_deletion_error">Failed to delete user</string>
     <string name="start_search">Start search</string>
@@ -27,7 +26,6 @@
     <string name="pick_place">Choose a place</string>
 
     <string name="no_geocoder_available">No geocoder available</string>
-    <string name="update_current_address">Update current address</string>
     <string name="address_found">Address found</string>
     <string name="no_address_found">Sorry, no address found</string>
     <string name="no_location_data_provided">No location data provided</string>

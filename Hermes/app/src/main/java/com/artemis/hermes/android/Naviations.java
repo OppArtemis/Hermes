@@ -65,7 +65,6 @@ import retrofit2.Callback;
 import com.yelp.fusion.client.connection.YelpFusionApi;
 import com.yelp.fusion.client.connection.YelpFusionApiFactory;
 import com.yelp.fusion.client.models.Business;
-import com.yelp.fusion.client.models.Category;
 import com.yelp.fusion.client.models.SearchResponse;
 
 import org.json.JSONArray;
@@ -127,7 +126,7 @@ public class Naviations extends AppCompatActivity {
      */
     private String mCurrentAddressOutput;
 
-    private String targetAddress = "55 Northfield, Waterloo, Canada";
+    private String targetAddress = mCurrentAddressOutput;
 
     private List<RestaurantGoogleHandle> foundLocations;
 
@@ -147,10 +146,7 @@ public class Naviations extends AppCompatActivity {
     private Button mFetchAddressButton;
 
     private EditText mLocationTargetEditText;
-    private Button mCopyCurrentLocationButton;
     private Button mStartSearch;
-    private Button mNavigate;
-    private Button mYelpButton;
     private ListView mRetrievedRestaurants;
     private ArrayAdapter<String> adapter;
 
@@ -164,15 +160,12 @@ public class Naviations extends AppCompatActivity {
 
         mResultReceiver = new AddressResultReceiver(new Handler());
 
-        mLocationAddressTextView = (TextView) findViewById(R.id.location_address_view);
-        mFetchAddressButton = (Button) findViewById(R.id.fetch_address_button);
-        mLocationTargetEditText = (EditText) findViewById(R.id.location_target_edit);
-        mCopyCurrentLocationButton = (Button) findViewById(R.id.copy_current_location);
-        mStartSearch = (Button) findViewById(R.id.button_startSearch);
-        mNavigate = (Button) findViewById(R.id.button_navigate);
-        mYelpButton = findViewById(R.id.yelpButton);
+        mLocationAddressTextView = findViewById(R.id.location_address_view);
+        mFetchAddressButton = findViewById(R.id.fetch_address_button);
+        mLocationTargetEditText = findViewById(R.id.location_target_edit);
+        mStartSearch = findViewById(R.id.button_startSearch);
 
-        mRetrievedRestaurants = (ListView) findViewById(R.id.list_retrievedRestaurants);
+        mRetrievedRestaurants = findViewById(R.id.list_retrievedRestaurants);
 
         // Create a new Adapter
         adapter = new ArrayAdapter<>(this,
@@ -180,9 +173,6 @@ public class Naviations extends AppCompatActivity {
 
         // Assign adapter to ListView
         mRetrievedRestaurants.setAdapter(adapter);
-
-        adapter.add("test1");
-        adapter.add("test2");
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
@@ -192,36 +182,23 @@ public class Naviations extends AppCompatActivity {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         fetchAddressButtonHandler(null);
-        updateUIWidgets();
         setHandles();
     }
 
     public void setHandles() {
-        mCopyCurrentLocationButton.setOnClickListener(new View.OnClickListener() {
+        mFetchAddressButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                fetchAddressButtonHandler(null);
                 copyCurrentLocationToTargetLocation();
-            }
-        });
-
-        mYelpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startSearchWithYelp();
             }
         });
 
         mStartSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startSearchWithGoogle();
-            }
-        });
-
-        mNavigate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                navigateToLocation(targetAddress);
+                //startSearchWithGoogle();
+                startSearchWithYelp();
             }
         });
 
@@ -270,7 +247,6 @@ public class Naviations extends AppCompatActivity {
     /**
      * Runs when user clicks the Fetch Address button.
      */
-    @SuppressWarnings("unused")
     public void fetchAddressButtonHandler(View view) {
         if (mLastLocation != null) {
             startIntentService();
@@ -281,7 +257,6 @@ public class Naviations extends AppCompatActivity {
         // mAddressRequested to true. As far as the user is concerned, pressing the Fetch Address button
         // immediately kicks off the process of getting the address.
         mAddressRequested = true;
-        updateUIWidgets();
     }
 
     /**
@@ -380,20 +355,6 @@ public class Naviations extends AppCompatActivity {
     }
 
     /**
-     * Toggles the visibility of the progress bar. Enables or disables the Fetch Address button.
-     */
-    private void updateUIWidgets() {
-        if (mAddressRequested) {
-             mFetchAddressButton.setEnabled(false);
-        } else {
-             mFetchAddressButton.setEnabled(true);
-        }
-
-        displayAddressOutput();
-        updateLocationInDatabase();
-    }
-
-    /**
      * Shows a toast with the given text.
      */
     private void showToast(String text) {
@@ -435,7 +396,8 @@ public class Naviations extends AppCompatActivity {
 
             // Reset. Enable the Fetch Address button and stop showing the progress bar.
             mAddressRequested = false;
-            updateUIWidgets();
+            displayAddressOutput();
+            updateLocationInDatabase();
         }
     }
 
@@ -673,6 +635,7 @@ public class Naviations extends AppCompatActivity {
      * It will set the adapter with search results.
      *
      */
+    @SuppressWarnings("unused")
     private void startSearchWithGoogle() {
         hideSoftwareKeyboard();
 
