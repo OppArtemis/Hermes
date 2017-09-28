@@ -103,24 +103,6 @@ public class SigninActivity extends AppCompatActivity {
             }
         });
 
-        // Button to delete user
-        Button deleteUserButton = findViewById(R.id.delete_user);
-        deleteUserButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                auth.getCurrentUser().delete().addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if(task.isSuccessful()){
-                            signOut();
-                        }else{
-                            displayMessage(getString(R.string.user_deletion_error));
-                        }
-                    }
-                });
-            }
-        });
-
         // Button to update user's location
         Button showMapButton = findViewById(R.id.view_map);
         showMapButton.setOnClickListener(new View.OnClickListener() {

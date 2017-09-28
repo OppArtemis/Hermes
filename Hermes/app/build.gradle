@@ -22,6 +22,19 @@ android {
     defaultConfig {
         resConfigs "auto"
     }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
 }
 
 dependencies {
@@ -99,6 +112,9 @@ dependencies {
     // Single target that includes all FirebaseUI libraries above
     compile 'com.firebaseui:firebase-ui:2.3.0'
     testCompile 'junit:junit:4.12'
+
+    // Yelp Fusion
+    compile 'io.github.ranga543:yelp-fusion-client:0.1.2'
 }
 
 apply plugin: 'com.google.gms.google-services'

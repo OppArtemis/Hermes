@@ -41,6 +41,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.AsyncTask;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -57,12 +58,28 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
 
+
+// Required for Yelp API
+import retrofit2.Call;
+import retrofit2.Callback;
+import com.yelp.fusion.client.connection.YelpFusionApi;
+import com.yelp.fusion.client.connection.YelpFusionApiFactory;
+import com.yelp.fusion.client.models.Business;
+import com.yelp.fusion.client.models.SearchResponse;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * Getting the Location Address.
@@ -111,9 +128,9 @@ public class Naviations extends AppCompatActivity {
      */
     private String mCurrentAddressOutput;
 
-    private String targetAddress = "55 Northfield, Waterloo, Canada";
+    private String targetAddress = mCurrentAddressOutput;
 
-    private List<RestaurantHandle> foundLocations;
+    private List<RestaurantGoogleHandle> foundLocations;
 
     /**
      * Receiver registered with this activity to get the response from FetchAddressIntentService.
@@ -131,11 +148,12 @@ public class Naviations extends AppCompatActivity {
     private Button mFetchAddressButton;
 
     private EditText mLocationTargetEditText;
-    private Button mCopyCurrentLocationButton;
     private Button mStartSearch;
-    private Button mNavigate;
     private ListView mRetrievedRestaurants;
     private ArrayAdapter<String> adapter;
+
+    // Yelp client API object
+    private YelpFusionApi mYelpFusionApi;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -144,14 +162,12 @@ public class Naviations extends AppCompatActivity {
 
         mResultReceiver = new AddressResultReceiver(new Handler());
 
-        mLocationAddressTextView = (TextView) findViewById(R.id.location_address_view);
-        mFetchAddressButton = (Button) findViewById(R.id.fetch_address_button);
-        mLocationTargetEditText = (EditText) findViewById(R.id.location_target_edit);
-        mCopyCurrentLocationButton = (Button) findViewById(R.id.copy_current_location);
-        mStartSearch = (Button) findViewById(R.id.button_startSearch);
-        mNavigate = (Button) findViewById(R.id.button_navigate);
+        mLocationAddressTextView = findViewById(R.id.location_address_view);
+        mFetchAddressButton = findViewById(R.id.fetch_address_button);
+        mLocationTargetEditText = findViewById(R.id.location_target_edit);
+        mStartSearch = findViewById(R.id.button_startSearch);
 
-        mRetrievedRestaurants = (ListView) findViewById(R.id.list_retrievedRestaurants);
+        mRetrievedRestaurants = findViewById(R.id.list_retrievedRestaurants);
 
         // Create a new Adapter
         adapter = new ArrayAdapter<>(this,
@@ -159,9 +175,6 @@ public class Naviations extends AppCompatActivity {
 
         // Assign adapter to ListView
         mRetrievedRestaurants.setAdapter(adapter);
-
-        adapter.add("test1");
-        adapter.add("test2");
 
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
@@ -171,14 +184,14 @@ public class Naviations extends AppCompatActivity {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         fetchAddressButtonHandler(null);
-        updateUIWidgets();
         setHandles();
     }
 
     public void setHandles() {
-        mCopyCurrentLocationButton.setOnClickListener(new View.OnClickListener() {
+        mFetchAddressButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                fetchAddressButtonHandler(null);
                 copyCurrentLocationToTargetLocation();
             }
         });
@@ -186,14 +199,8 @@ public class Naviations extends AppCompatActivity {
         mStartSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startSearchProc();
-            }
-        });
-
-        mNavigate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                navigateToLocation(targetAddress);
+                //startSearchWithGoogle();
+                startSearchWithYelp();
             }
         });
 
@@ -201,7 +208,11 @@ public class Naviations extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String polledString = String.valueOf(adapterView.getItemAtPosition(i));
-                navigateToLocation(polledString);
+
+                // In the event that there is "|" separators, we just need the first index of the
+                // string for the address
+                String [] polledStringSplit = polledString.split("\\|");
+                navigateToLocation(polledStringSplit[0]);
             }
         });
     }
@@ -238,7 +249,6 @@ public class Naviations extends AppCompatActivity {
     /**
      * Runs when user clicks the Fetch Address button.
      */
-    @SuppressWarnings("unused")
     public void fetchAddressButtonHandler(View view) {
         if (mLastLocation != null) {
             startIntentService();
@@ -249,7 +259,6 @@ public class Naviations extends AppCompatActivity {
         // mAddressRequested to true. As far as the user is concerned, pressing the Fetch Address button
         // immediately kicks off the process of getting the address.
         mAddressRequested = true;
-        updateUIWidgets();
     }
 
     /**
@@ -348,20 +357,6 @@ public class Naviations extends AppCompatActivity {
     }
 
     /**
-     * Toggles the visibility of the progress bar. Enables or disables the Fetch Address button.
-     */
-    private void updateUIWidgets() {
-        if (mAddressRequested) {
-             mFetchAddressButton.setEnabled(false);
-        } else {
-             mFetchAddressButton.setEnabled(true);
-        }
-
-        displayAddressOutput();
-        updateLocationInDatabase();
-    }
-
-    /**
      * Shows a toast with the given text.
      */
     private void showToast(String text) {
@@ -403,7 +398,8 @@ public class Naviations extends AppCompatActivity {
 
             // Reset. Enable the Fetch Address button and stop showing the progress bar.
             mAddressRequested = false;
-            updateUIWidgets();
+            displayAddressOutput();
+            updateLocationInDatabase();
         }
     }
 
@@ -525,21 +521,163 @@ public class Naviations extends AppCompatActivity {
         mLocationTargetEditText.setText(mCurrentAddressOutput);
     }
 
-    private void startSearchProc() {
-        // hide software keyboard
+    /**
+     * Hides software keyboard.
+     */
+    private void hideSoftwareKeyboard() {
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
                 InputMethodManager.RESULT_UNCHANGED_SHOWN);
+    }
+
+    /**
+     * Instantiates the Yelp client API.
+     */
+    private void instantiateYelpApi(){
+        if (mYelpFusionApi == null) {
+
+            InitiateYelpApi initiateYelpApiObj = new InitiateYelpApi();
+            initiateYelpApiObj.execute();
+
+            // Try polling for asynch task to finish
+            try {
+                initiateYelpApiObj.get(3000, TimeUnit.MILLISECONDS);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Method to search for restaurants with Yelp API.
+     *
+     * It will set the adapter with search results.
+     *
+     */
+    private void startSearchWithYelp(){
+        hideSoftwareKeyboard();
+
+        String targetAddressFieldStr = mLocationTargetEditText.getText().toString();
+        if (targetAddressFieldStr.length() > 0) {
+            targetAddress = targetAddressFieldStr;
+        } else {
+            targetAddress = mCurrentAddressOutput;
+        }
+
+        instantiateYelpApi();
+
+        // This value will not be null if the instantiation worked.
+        if (mYelpFusionApi != null) {
+
+            Map<String, String> params = new HashMap<>();
+
+            // Enter filter on search.
+            // Limit the radius to 4km.
+            // To do: if 4km radius returns less than a threshold number of restaurants, then
+            // the program should be smart to search a larger radius.
+            params.put("term", "Restaurants");
+            params.put("radius", "4000");
+            params.put("sort_by", "distance");
+
+            // Use the target location from the address field as a first option.
+            if (targetAddress != null) {
+                params.put("location", targetAddress);
+                showSnackbar("Searching at: " + targetAddress);
+            } else if (mLastLocation != null) {
+                String latitude = String.valueOf(mLastLocation.getLatitude());
+                String longitude = String.valueOf(mLastLocation.getLongitude());
+                params.put("latitude", latitude);
+                params.put("longitude", longitude);
+                showSnackbar("Searching at: " + latitude + ", " + longitude);
+            }
+
+            Call<SearchResponse> call = mYelpFusionApi.getBusinessSearch(params);
+
+            // Need a callback to make the call asynchronous
+            Callback<SearchResponse> callback = new Callback<SearchResponse>() {
+                @Override
+                public void onResponse(Call<SearchResponse> call,
+                                       retrofit2.Response<SearchResponse> response) {
+                    if (response.isSuccessful()) {
+
+                        // Clear the default list of info.
+                        adapter.clear();
+
+                        // Get all the businesses from response.
+                        SearchResponse searchResponse = response.body();
+                        List<Business> businesses = searchResponse.getBusinesses();
+
+                        List<RestaurantYelpHandle> restaurantObjects = new ArrayList<>();
+
+                        // Iterate through each restaurant, and get information from each.
+                        for (int i = 0; i < businesses.size(); i++) {
+                            restaurantObjects.add(new RestaurantYelpHandle(businesses.get(i)));
+                        }
+
+                        // Sort restaurant list
+                        sortRetrievedYelpRestaurants(restaurantObjects);
+
+                        // Add new list to the listview adapter
+                        for (int i = 0; i < businesses.size(); i++) {
+                            adapter.add(restaurantObjects.get(i).toFullString());
+                        }
+                    } else {
+                        adapter.add("HTTP Response was not successful: " + response.code());
+                    }
+                }
+                @Override
+                public void onFailure(Call<SearchResponse> call, Throwable t) {
+                    // HTTP error happened, do something to handle it.
+                    adapter.add("Cannot find restaurants due to HTTP error");
+                    Log.d(TAG, "Failure on Yelp Search API:\n" + t.toString());
+                }
+            };
+
+            call.enqueue(callback);
+        }
+    }
+
+    private List<RestaurantYelpHandle> sortRetrievedYelpRestaurants(List<RestaurantYelpHandle> inputArray) {
+        // sort by rating
+        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_RATING);
+        for (int i = 0; i < inputArray.size(); i++) {
+            inputArray.get(i).addToSortScore(i);
+        }
+
+        // sort by distance
+        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_DISTANCE);
+        for (int i = 0; i < inputArray.size(); i++) {
+            inputArray.get(i).addToSortScore(i);
+        }
+
+        // finally, sort by the sort score
+        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_SORTSCORE);
+
+        return inputArray;
+    }
+
+    /**
+     * Method to search for restaurants with Google API.
+     *
+     * It will set the adapter with search results.
+     *
+     */
+    @SuppressWarnings("unused")
+    private void startSearchWithGoogle() {
+        hideSoftwareKeyboard();
 
         // check input address to make sure there's something
         String targetAddressFieldStr = mLocationTargetEditText.getText().toString();
         if (targetAddressFieldStr.length() > 0) {
             targetAddress = targetAddressFieldStr;
+        } else if (mLastLocation != null) {
+            targetAddress = String.valueOf(mLastLocation.getLatitude()) + ", " +
+                    String.valueOf(mLastLocation.getLongitude());
         } else {
-
+            targetAddress = mCurrentAddressOutput;
         }
 
-        showSnackbar("Searching at: " + mLocationTargetEditText.getText());
+        showSnackbar("Searching at: " + targetAddress);
 
         String googleMapApiKey = getString(R.string.google_maps_api_key);
         String locationType = "restaurant";
@@ -550,8 +688,6 @@ public class Naviations extends AppCompatActivity {
                 "&query=" + targetLocation.replace(" ", "+") +
                 "&type=" + locationType;
 
-         // This string will hold the results
-        String data = "";
         // Defining the Volley request queue that handles the URL request concurrently
         RequestQueue requestQueue;
 
@@ -577,7 +713,7 @@ public class Naviations extends AppCompatActivity {
                             foundLocations = new ArrayList<>();
                             for (int i = 0; i < jsonResponseArray.length(); i++) {
                                 JSONObject currResponse = jsonResponseArray.getJSONObject(i);
-                                foundLocations.add(new RestaurantHandle(currResponse));
+                                foundLocations.add(new RestaurantGoogleHandle(currResponse));
 
                                 adapter.add(foundLocations.get(i).toString());
                             }
@@ -617,4 +753,49 @@ public class Naviations extends AppCompatActivity {
         Intent mapIntent = new Intent(Intent.ACTION_VIEW, location);
         startActivity(mapIntent);
     }
+
+    /**
+     * InitiateYelpApi class that initiates Yelp API
+     *
+     * @author  Jorge Quan
+     * @since   2017-09-34
+     */
+    private class InitiateYelpApi extends AsyncTask<String, Void, String> {
+
+        /**
+         * Method that performs the call to the API
+         *
+         * @param params to enter as input for API
+         *
+         * @return data of the API
+         */
+        @Override
+        protected String doInBackground(String... params) {
+
+            // Authenticate and use API
+            String appId = getString(R.string.yelp_api_id);
+            String appSecret = getString(R.string.yelp_api_secret);
+            YelpFusionApiFactory apiFactory = new YelpFusionApiFactory();
+
+            try {
+                mYelpFusionApi = apiFactory.createAPI(appId, appSecret);
+            } catch (IOException e){
+                e.printStackTrace();
+                return "Bad";
+            }
+
+            return "Good";
+        }
+
+        /**
+         * Post execute after API call.
+         *
+         * @param result is the string output of API
+         */
+        @Override
+        protected void onPostExecute(String result) {
+            Log.d(TAG, "Result of instantiating Yelp client API: " + result);
+        }
+    }
+
 }

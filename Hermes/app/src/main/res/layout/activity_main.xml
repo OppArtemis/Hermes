@@ -7,14 +7,14 @@
     tools:context=".MainActivity">
     <TextView
         android:id="@+id/welcome"
-        android:layout_alignParentTop="true"
-        android:layout_centerVertical="true"
         android:text="@string/welcome"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="76dp"
         android:textColor="@color/colorBlack"
-        android:textSize="13dp"
+        android:textSize="18dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
     <Button
         android:id="@+id/login_button"
         android:layout_width="wrap_content"
