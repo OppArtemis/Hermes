@@ -73,6 +73,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -603,14 +605,20 @@ public class Naviations extends AppCompatActivity {
 
                         // Get all the businesses from response.
                         SearchResponse searchResponse = response.body();
-                        ArrayList<Business> businesses = searchResponse.getBusinesses();
+                        List<Business> businesses = searchResponse.getBusinesses();
 
-                        ArrayList<RestaurantYelpHandle> restaurantObjects = new ArrayList<>();
+                        List<RestaurantYelpHandle> restaurantObjects = new ArrayList<>();
 
                         // Iterate through each restaurant, and get information from each.
                         for (int i = 0; i < businesses.size(); i++) {
-
                             restaurantObjects.add(new RestaurantYelpHandle(businesses.get(i)));
+                        }
+
+                        // Sort restaurant list
+                        sortRetrievedYelpRestaurants(restaurantObjects);
+
+                        // Add new list to the listview adapter
+                        for (int i = 0; i < businesses.size(); i++) {
                             adapter.add(restaurantObjects.get(i).toFullString());
                         }
                     } else {
@@ -627,6 +635,25 @@ public class Naviations extends AppCompatActivity {
 
             call.enqueue(callback);
         }
+    }
+
+    private List<RestaurantYelpHandle> sortRetrievedYelpRestaurants(List<RestaurantYelpHandle> inputArray) {
+        // sort by rating
+        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_RATING);
+        for (int i = 0; i < inputArray.size(); i++) {
+            inputArray.get(i).addToSortScore(i);
+        }
+
+        // sort by distance
+        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_DISTANCE);
+        for (int i = 0; i < inputArray.size(); i++) {
+            inputArray.get(i).addToSortScore(i);
+        }
+
+        // finally, sort by the sort score
+        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_SORTSCORE);
+
+        return inputArray;
     }
 
     /**
