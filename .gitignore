@@ -48,7 +48,7 @@ captures/
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
-Hermes Restaurant Search-408023883e26.json
+Hermes/logic/src/main/webapp/WEB-INF/Hermes Restaurant Search-408023883e26.json
 
 # Freeline
 freeline.py
@@ -56,3 +56,4 @@ freeline/
 freeline_project_description.json
 
 **/*/res/values/secrets.xml
+
