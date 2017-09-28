@@ -19,6 +19,7 @@ public class RestaurantYelpHandle implements RestaurantBase {
     private String addressFull;
     private Boolean openNow;
     private double rating;
+    private double reviewCount;
     private double distance;
     private ArrayList<String> categories;
 
@@ -30,6 +31,8 @@ public class RestaurantYelpHandle implements RestaurantBase {
         this.addressFull = businessLocation.getAddress1();
 
         this.rating = business.getRating();
+        this.reviewCount = business.getReviewCount();
+
         this.distance = business.getDistance();
         this.openNow = !business.getIsClosed();
 
@@ -70,6 +73,10 @@ public class RestaurantYelpHandle implements RestaurantBase {
 
     public double getRating() {
         return this.rating;
+    }
+
+    public double getReviewCount() {
+        return this.reviewCount;
     }
 
     public double getDistance() {
