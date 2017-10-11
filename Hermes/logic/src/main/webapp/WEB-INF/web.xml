@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee">
     <servlet>
-        <servlet-name>SystemServiceServlet</servlet-name>
+        <servlet-name>EndpointsServlet</servlet-name>
         <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
         <init-param>
             <param-name>services</param-name>
@@ -9,8 +9,8 @@
         </init-param>
     </servlet>
     <servlet-mapping>
-        <servlet-name>SystemServiceServlet</servlet-name>
-        <url-pattern>/_ah/spi/*</url-pattern>
+        <servlet-name>EndpointsServlet</servlet-name>
+        <url-pattern>/_ah/api/*</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

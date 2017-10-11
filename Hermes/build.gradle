@@ -7,6 +7,9 @@ buildscript {
         jcenter()
     }
     dependencies {
+        // V2: Include this dependency when using Endpoints Framework v2
+        classpath 'com.google.guava:guava:19.0'
+
         classpath 'com.android.tools.build:gradle:2.3.3'
         classpath 'com.google.gms:google-services:3.1.0'
 
@@ -29,7 +32,7 @@ allprojects {
 
     ext {
         googleApiVersion = '11.2.2'
-        googleClientApiVersion = '1.22.0'
+        googleClientApiVersion = '1.23.0'
         backendSdkVersion = '1.9.55'
     }
 }

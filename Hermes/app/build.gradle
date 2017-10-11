@@ -1,5 +1,18 @@
 apply plugin: 'com.android.application'
 
+// V2: Apply the new Endpoints Framework client plugin
+apply plugin: 'com.google.cloud.tools.endpoints-framework-client'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        // V2: Add the new Endpoints Framework plugin dependencies
+        classpath 'com.google.cloud.tools:endpoints-framework-gradle-plugin:1.0.0'
+    }
+}
+
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.1"
@@ -13,6 +26,11 @@ android {
 
         multiDexEnabled true
     }
+
+    configurations.all {
+        resolutionStrategy.force 'com.google.code.findbugs:jsr305:1.3.9'
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -38,8 +56,10 @@ android {
 }
 
 dependencies {
-//    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(path: ':logic', configuration: 'android-endpoints')
+    //compile fileTree(include: ['*.jar'], dir: 'libs')
+    // V2: Apply the new Endpoints Framework client plugin
+    endpointsServer project(path: ':logic', configuration: 'endpoints')
+    compile "com.google.http-client:google-http-client-android:$rootProject.ext.googleClientApiVersion"
 
     // async network functionalities
     compile 'com.mcxiaoke.volley:library:1.0.19'
@@ -111,6 +131,13 @@ dependencies {
 
     // Single target that includes all FirebaseUI libraries above
     compile 'com.firebaseui:firebase-ui:2.3.0'
+
+    // androidTestCompile compiles instrumentation tests written using Espresso
+    // used by Firebase Test Lab
+    androidTestCompile('com.android.support.test.espresso:espresso-core:3.0.1', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
     testCompile 'junit:junit:4.12'
 
     // Yelp Fusion
