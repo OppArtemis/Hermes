@@ -8,12 +8,8 @@ buildscript {
     }
     dependencies {
         // V2: Add the new App Engine and Endpoints Frameworks plugin dependencies
-
-        // App Engine Gradle plugin
-        classpath 'com.google.cloud.tools:appengine-gradle-plugin:+'
-
-        // Endpoints Frameworks Gradle plugin
-        classpath 'com.google.cloud.tools:endpoints-framework-gradle-plugin:+'
+        classpath 'com.google.cloud.tools:endpoints-framework-gradle-plugin:1.0.0'
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:1.3.2'
     }
 }
 
@@ -36,17 +32,14 @@ dependencies {
     compile 'javax.inject:javax.inject:1'
     compile 'javax.servlet:servlet-api:2.5'
 
-    // Needed to interact with firebase
-    compile 'com.google.firebase:firebase-server-sdk:3.0.3'
-
     // Needed to access the database
     compile 'com.google.firebase:firebase-admin:5.3.1'
 
     compile 'org.apache.httpcomponents:httpclient:4.5.3'
 
     // V2: Endpoints Framework v2 migration
-    compile group: 'com.google.appengine', name: 'appengine-api-1.0-sdk', version: '+'
-    compile group: 'com.google.endpoints', name: 'endpoints-framework', version: '+'
+    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.57'
+    compile 'com.google.endpoints:endpoints-framework:2.0.8'
 }
 
 appengine {

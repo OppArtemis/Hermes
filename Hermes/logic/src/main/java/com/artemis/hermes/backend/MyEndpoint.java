@@ -18,6 +18,7 @@ import javax.inject.Named;
 
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseCredentials;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -115,15 +116,20 @@ public class MyEndpoint {
 
         if (serviceAccount != null) {
             FirebaseOptions options = null;
-            options = new FirebaseOptions.Builder()
-                     .setDatabaseUrl("https://hermes-c1b9b.firebaseio.com")
-                     .setServiceAccount(serviceAccount)
-                    .build();
 
-            // If the App is initialized already, don't need to do it again.
-            List apps = FirebaseApp.getApps();
-            if (apps.size() <= 0){
-                FirebaseApp.initializeApp(options);
+            try {
+                options = new FirebaseOptions.Builder()
+                        .setDatabaseUrl("https://hermes-c1b9b.firebaseio.com")
+                        .setCredential(FirebaseCredentials.fromCertificate(serviceAccount))
+                        .build();
+
+                // If the App is initialized already, don't need to do it again.
+                List apps = FirebaseApp.getApps();
+                if (apps.size() <= 0) {
+                    FirebaseApp.initializeApp(options);
+                }
+            } catch (java.io.IOException e) {
+                e.printStackTrace();
             }
         }
 
