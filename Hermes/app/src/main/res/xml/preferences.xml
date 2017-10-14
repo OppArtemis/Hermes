@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference android:title="Choose always McDonald's"
+        android:defaultValue="false"
+        android:summary="Whether user wants to always choose McDonald's"
+        android:key="chooseMcDonalds" />
+</PreferenceScreen>

@@ -23,6 +23,9 @@
         </activity>
         <activity android:name=".SigninActivity" />
         <activity android:name=".Naviations" />
+        <activity android:name=".AppPreferenceActivity"/>
+        <activity android:name=".RestaurantFeedbackActivity"/>
+
         <service
             android:name=".FetchAddressIntentService"
             android:exported="false"/>

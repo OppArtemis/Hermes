@@ -2,6 +2,7 @@ package com.artemis.hermes.android;
 
 import com.google.common.base.Joiner;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 
@@ -12,7 +13,7 @@ import java.util.Comparator;
  * @since   2017-09-25
  */
 
-public abstract class RestaurantAbstract {
+public abstract class RestaurantAbstract implements Serializable {
     protected String name;
     protected String addressFull;
     protected Boolean openNow;
@@ -26,13 +27,15 @@ public abstract class RestaurantAbstract {
     protected int sortScore = 0;
 
     public String toString() {
-        return this.getName() + " (" + this.getAddress() + ") " + "| " + this.getRating();
+        return this.getName() + " (" + this.getAddress() + ") " +
+                "| " + Joiner.on(",").join(this.getCategories());
     }
 
     public String toFullString() {
-        return this.getName() + " (" + this.getAddress() + ") " +
-                "| " + this.getRating() +
-                "| " + Joiner.on(",").join(this.getCategories());
+        return "Name: " + this.getName() + "\n" +
+                "Address: " + this.getAddress() + "\n" +
+                "Rating: " + this.getRating() + "\n" +
+                "Category: " + Joiner.on(",").join(this.getCategories());
     }
 
     public static Comparator<RestaurantYelpHandle> COMPARE_BY_DISTANCE = new Comparator<RestaurantYelpHandle>() {
