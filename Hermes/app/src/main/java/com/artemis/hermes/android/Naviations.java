@@ -336,13 +336,11 @@ public class Naviations extends AppCompatActivity
      */
     private void updateLocationInDatabase(){
         // Instantiate a reference to the database
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
 
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        String userId = bundle.getString("userId");
+        String userId = getIntent().getExtras().getString("userId");
 
-        mDatabase.child("users").
+        database.child("users").
                 child(userId).
                 child("address").
                 setValue(mCurrentAddressOutput);
@@ -352,7 +350,7 @@ public class Naviations extends AppCompatActivity
             String locationString = mLastLocation.getLatitude() +
                     "," + mLastLocation.getLongitude();
 
-            mDatabase.child("users").
+            database.child("users").
                     child(userId).
                     child("location").
                     setValue(locationString);
@@ -758,7 +756,15 @@ public class Naviations extends AppCompatActivity
      *
      */
     private void goToRestaurantFeedback(RestaurantAbstract restaurantObj) {
+
         Intent feedbackIntent = new Intent(this, RestaurantFeedbackActivity.class);
+
+        String userId = getIntent().getExtras().getString("userId");
+
+        // Pass the user ID
+        feedbackIntent.putExtra("userId", userId);
+
+        // Pass the restaurant object
         feedbackIntent.putExtra("serialize_data", restaurantObj);
         startActivity(feedbackIntent);
     }
