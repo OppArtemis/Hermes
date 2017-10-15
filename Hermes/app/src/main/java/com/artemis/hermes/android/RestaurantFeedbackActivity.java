@@ -11,6 +11,9 @@ import android.widget.RatingBar.OnRatingBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 /**
  *  Activity that allows user to rate the restaurant.
  *
@@ -102,11 +105,48 @@ public class RestaurantFeedbackActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Toast.makeText(RestaurantFeedbackActivity.this,
-                        "Restaurant rating: " + String.valueOf(restaurantRatingBar.getRating()) + "\n" +
-                        "Branch rating: " + String.valueOf(branchRatingBar.getRating()),
-                        Toast.LENGTH_SHORT).show();
+            String restaurantRating = String.valueOf(restaurantRatingBar.getRating());
+            String branchRating = String.valueOf(branchRatingBar.getRating());
+
+            saveFeedbackToDatabase(restaurantRating, branchRating);
+
+            Toast.makeText(RestaurantFeedbackActivity.this,
+                    "Restaurant rating: " + restaurantRating + "\n" +
+                    "Branch rating: " + branchRating,
+                    Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     *  Saves feedback onto the database
+     *
+     */
+    public void saveFeedbackToDatabase(String restaurantRating, String branchRating) {
+        String userId = getIntent().getExtras().getString("userId");
+
+        RestaurantAbstract restaurantObj =
+                (RestaurantAbstract) getIntent().getSerializableExtra("serialize_data");
+
+        if (userId != null && restaurantObj != null) {
+            // Instantiate a reference to the database
+            DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+
+            String restaurantUniqueName = restaurantObj.toString();
+
+            database.child("users").
+                    child(userId).
+                    child("RestaurantFeedback").
+                    child(restaurantUniqueName).
+                    child("RestaurantRating").
+                    setValue(restaurantRating);
+
+            database.child("users").
+                    child(userId).
+                    child("RestaurantFeedback").
+                    child(restaurantUniqueName).
+                    child("BranchRating").
+                    setValue(branchRating);
+        }
     }
 }
