@@ -125,7 +125,10 @@ public class RestaurantFeedbackActivity extends AppCompatActivity {
 
                 // Instantiate database object
                 FirebaseDatabase databaseObj = FirebaseDatabase.getInstance();
+
+                // Write to restaurant feedback into database
                 restaurantFeedbackObj.addSelfToDatabase(databaseObj, userId);
+                restaurantObj.addSelfToDatabase(databaseObj);
             }
             }
         });

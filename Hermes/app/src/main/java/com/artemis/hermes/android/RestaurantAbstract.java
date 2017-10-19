@@ -1,6 +1,8 @@
 package com.artemis.hermes.android;
 
 import com.google.common.base.Joiner;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -103,4 +105,18 @@ public abstract class RestaurantAbstract implements Serializable {
 
     // --- SETTERS ---
     public void addToSortScore(int sortScore) { this.sortScore = this.sortScore + sortScore; }
+
+    // --- OTHER METHODS ---
+
+    /**
+     *  Writes content of itself to the database
+     *
+     *  @param database Firebase database object
+     *
+     */
+    public void addSelfToDatabase (FirebaseDatabase database) {
+        DatabaseReference databaseRef =
+                database.getReference("restaurant" + "/" + toShortUniqueName() + "/");
+        databaseRef.setValue(this);
+    }
 }
