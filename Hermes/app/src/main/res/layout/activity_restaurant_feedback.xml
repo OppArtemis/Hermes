@@ -57,14 +57,14 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/rate_branch_text"
+        android:id="@+id/rate_cuisine_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="@dimen/default_text_size"
-        android:text="@string/rate_branch" />
+        android:text="@string/rate_cuisine" />
 
     <RatingBar
-        android:id="@+id/branch_rating_bar"
+        android:id="@+id/cuisine_rating_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:numStars="5"
@@ -77,13 +77,13 @@
         android:layout_height="wrap_content" >
 
         <TextView
-            android:id="@+id/branch_rating"
+            android:id="@+id/cuisine_rating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Result : " />
 
         <TextView
-            android:id="@+id/branch_rating_value"
+            android:id="@+id/cuisine_rating_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="" />

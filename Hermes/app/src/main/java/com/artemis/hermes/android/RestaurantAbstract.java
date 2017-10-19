@@ -26,6 +26,10 @@ public abstract class RestaurantAbstract implements Serializable {
 
     protected int sortScore = 0;
 
+    public String toShortUniqueName() {
+        return this.getName() + " (" + this.getAddress() + ")";
+    }
+
     public String toString() {
         return this.getName() + " (" + this.getAddress() + ") " +
                 "| " + Joiner.on(",").join(this.getCategories());

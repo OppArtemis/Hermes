@@ -25,8 +25,8 @@ public class RestaurantFeedbackActivity extends AppCompatActivity {
     private RatingBar restaurantRatingBar;
     private TextView restaurantRatingValue;
 
-    private RatingBar branchRatingBar;
-    private TextView branchRatingValue;
+    private RatingBar cuisineRatingBar;
+    private TextView cuisineRatingValue;
 
     private Button submitButton;
 
@@ -77,14 +77,14 @@ public class RestaurantFeedbackActivity extends AppCompatActivity {
             }
         });
 
-        branchRatingBar = findViewById(R.id.branch_rating_bar);
-        branchRatingValue = findViewById(R.id.branch_rating_value);
+        cuisineRatingBar = findViewById(R.id.cuisine_rating_bar);
+        cuisineRatingValue = findViewById(R.id.cuisine_rating_value);
 
-        branchRatingBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
+        cuisineRatingBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
             public void onRatingChanged(RatingBar ratingBar, float rating,
                                         boolean fromUser) {
 
-                branchRatingValue.setText(String.valueOf(rating));
+                cuisineRatingValue.setText(String.valueOf(rating));
             }
         });
     }
@@ -96,7 +96,7 @@ public class RestaurantFeedbackActivity extends AppCompatActivity {
     public void addListenerOnButton() {
 
         restaurantRatingBar = findViewById(R.id.restaurant_rating_bar);
-        branchRatingBar = findViewById(R.id.branch_rating_bar);
+        cuisineRatingBar = findViewById(R.id.cuisine_rating_bar);
         submitButton = findViewById(R.id.btnSubmit);
 
         //if click on me, then display the current rating value.
@@ -105,48 +105,29 @@ public class RestaurantFeedbackActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-            String restaurantRating = String.valueOf(restaurantRatingBar.getRating());
-            String branchRating = String.valueOf(branchRatingBar.getRating());
-
-            saveFeedbackToDatabase(restaurantRating, branchRating);
+            float restaurantRating = restaurantRatingBar.getRating();
+            float cuisineRating = cuisineRatingBar.getRating();
 
             Toast.makeText(RestaurantFeedbackActivity.this,
-                    "Restaurant rating: " + restaurantRating + "\n" +
-                    "Branch rating: " + branchRating,
+                    "Restaurant rating: " + String.valueOf(restaurantRating) + "\n" +
+                            "Cuisine rating: " + String.valueOf(cuisineRating),
                     Toast.LENGTH_SHORT).show();
+
+            String userId = getIntent().getExtras().getString("userId");
+
+            RestaurantAbstract restaurantObj =
+                    (RestaurantAbstract) getIntent().getSerializableExtra("serialize_data");
+
+            if (userId != null && restaurantObj != null) {
+
+                RestaurantFeedback restaurantFeedbackObj =
+                        new RestaurantFeedback(restaurantObj.toShortUniqueName(), restaurantRating, cuisineRating);
+
+                // Instantiate database object
+                FirebaseDatabase databaseObj = FirebaseDatabase.getInstance();
+                restaurantFeedbackObj.addSelfToDatabase(databaseObj, userId);
+            }
             }
         });
-    }
-
-    /**
-     *  Saves feedback onto the database
-     *
-     */
-    public void saveFeedbackToDatabase(String restaurantRating, String branchRating) {
-        String userId = getIntent().getExtras().getString("userId");
-
-        RestaurantAbstract restaurantObj =
-                (RestaurantAbstract) getIntent().getSerializableExtra("serialize_data");
-
-        if (userId != null && restaurantObj != null) {
-            // Instantiate a reference to the database
-            DatabaseReference database = FirebaseDatabase.getInstance().getReference();
-
-            String restaurantUniqueName = restaurantObj.toString();
-
-            database.child("users").
-                    child(userId).
-                    child("RestaurantFeedback").
-                    child(restaurantUniqueName).
-                    child("RestaurantRating").
-                    setValue(restaurantRating);
-
-            database.child("users").
-                    child(userId).
-                    child("RestaurantFeedback").
-                    child(restaurantUniqueName).
-                    child("BranchRating").
-                    setValue(branchRating);
-        }
     }
 }

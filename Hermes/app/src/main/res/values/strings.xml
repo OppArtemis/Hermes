@@ -39,7 +39,7 @@
     <string name="current_location_searching">null</string>
 
     <string name="rate_restaurant">Rate Restaurant</string>
-    <string name="rate_branch">Rate Branch</string>
+    <string name="rate_cuisine">Rate Cuisine</string>
     <string name="submit">Submit</string>
 
     <!-- Facebook Application ID, prefixed by 'fb'. -->
