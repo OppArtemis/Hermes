@@ -47,12 +47,17 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.firebase.ui.auth.User;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 //Firebase database packages
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DatabaseReference;
 
@@ -60,6 +65,8 @@ import com.google.firebase.database.DatabaseReference;
 // Required for Yelp API
 import retrofit2.Call;
 import retrofit2.Callback;
+
+import com.google.firebase.database.ValueEventListener;
 import com.yelp.fusion.client.connection.YelpFusionApi;
 import com.yelp.fusion.client.connection.YelpFusionApiFactory;
 import com.yelp.fusion.client.models.Business;
@@ -149,8 +156,12 @@ public class Naviations extends AppCompatActivity
 
     private EditText mLocationTargetEditText;
     private Button mStartSearch;
+<<<<<<< HEAD
 
     // ListView object that lists all restaurants
+=======
+    private Button mStartSearchGroup;
+>>>>>>> f3b8ddef2fa003833c495034881e58bac9a25b75
     private ListView mRetrievedRestaurants;
 
     // ListAdapter object that displays restaurant info
@@ -173,6 +184,7 @@ public class Naviations extends AppCompatActivity
         mFetchAddressButton = findViewById(R.id.fetch_address_button);
         mLocationTargetEditText = findViewById(R.id.location_target_edit);
         mStartSearch = findViewById(R.id.button_startSearch);
+        mStartSearchGroup = findViewById(R.id.button_startSearchGroup);
 
         mRetrievedRestaurants = findViewById(R.id.list_retrievedRestaurants);
 
@@ -218,6 +230,29 @@ public class Naviations extends AppCompatActivity
                 startSearchWithYelp();
             }
         });
+<<<<<<< HEAD
+=======
+
+        mStartSearchGroup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //startSearchWithGoogle();
+                startSearchWithYelpGroup();
+            }
+        });
+
+        mRetrievedRestaurants.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String polledString = String.valueOf(adapterView.getItemAtPosition(i));
+
+                // In the event that there is "|" separators, we just need the first index of the
+                // string for the address
+                String [] polledStringSplit = polledString.split("\\|");
+                navigateToLocation(polledStringSplit[0]);
+            }
+        });
+>>>>>>> f3b8ddef2fa003833c495034881e58bac9a25b75
     }
 
     @Override
@@ -548,6 +583,58 @@ public class Naviations extends AppCompatActivity
             }
         }
     }
+
+    public void startSearchWithYelpGroup() {
+        // find nearby people
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference refUserNode = database.getReference("users" + "/");
+
+        // Attach a listener to read the data at our posts reference
+        refUserNode.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                onUserDataRead(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
+        });
+    }
+
+    public void onUserDataRead(DataSnapshot dataSnapshot) {
+        UserProfile currentUser = new UserProfile();
+        String currentUserName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+
+        for (DataSnapshot child: dataSnapshot.getChildren()) {
+            UserProfile newPost = child.getValue(UserProfile.class);
+
+            if (newPost.getName().equals(currentUserName)) {
+                currentUser = newPost;
+                break;
+            }
+        }
+
+        List<UserProfile> closebyUsers = new ArrayList<>();
+        double[] currentLocation = currentUser.retrieveLocation();
+        double disTol = 0.5; // 0.5 km
+        for (DataSnapshot child: dataSnapshot.getChildren()) {
+            UserProfile newPost = child.getValue(UserProfile.class);
+            double[] newLocation = newPost.retrieveLocation();
+
+//            if (checkDistance(newLocation, currentLocation) < disTol) {
+//                closebyUsers.add(newPost);
+//            }
+        }
+
+        // return a list of users
+        int la = 0;
+    }
+
+//    public void double checkDistance(double[] latlong1, double[] latlong2) {
+//
+//    }
 
     /**
      * Method to search for restaurants with Yelp API.
