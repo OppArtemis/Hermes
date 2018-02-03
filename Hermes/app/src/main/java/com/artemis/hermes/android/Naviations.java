@@ -593,29 +593,34 @@ public class Naviations extends AppCompatActivity {
 
             if (newPost.getName().equals(currentUserName)) {
                 currentUser = newPost;
+                currentUser.init();
                 break;
             }
         }
 
         List<UserProfile> closebyUsers = new ArrayList<>();
-        double[] currentLocation = currentUser.retrieveLocation();
+        double[] currentLocation = currentUser.retrieveLatLng();
         double disTol = 0.5; // 0.5 km
         for (DataSnapshot child: dataSnapshot.getChildren()) {
             UserProfile newPost = child.getValue(UserProfile.class);
-            double[] newLocation = newPost.retrieveLocation();
+            newPost.init();
+            double[] newLocation = newPost.retrieveLatLng();
 
-//            if (checkDistance(newLocation, currentLocation) < disTol) {
-//                closebyUsers.add(newPost);
-//            }
+            if (checkDistance(newLocation, currentLocation) < disTol) {
+                closebyUsers.add(newPost);
+            }
         }
 
         // return a list of users
         int la = 0;
     }
 
-//    public void double checkDistance(double[] latlong1, double[] latlong2) {
-//
-//    }
+    public double checkDistance(double[] latlng1, double[] latlng2) {
+        float[] results = new float[1];
+        Location.distanceBetween(latlng1[0], latlng1[1], latlng2[0], latlng2[1], results);
+
+        return Double.parseDouble(Float.toString(results[0]));
+    }
 
     /**
      * Method to search for restaurants with Yelp API.

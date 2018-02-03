@@ -176,7 +176,7 @@ public class SigninActivity extends AppCompatActivity {
 
         mDatabase.child("users").
                 child(mUserId).
-                child("Name").
+                child("name").
                 setValue(userName);
         mDatabase.child("users").
                 child(mUserId).

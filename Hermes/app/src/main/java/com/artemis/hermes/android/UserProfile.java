@@ -9,18 +9,16 @@ public class UserProfile {
     private String address;
     private String lastLoginTime;
     private String location;
-    private double locationLong;
-    private double locationLat;
+    private double[] locationLatLng = new double[2];
 
     UserProfile() {
         // blank constructor for Firebase needs
-        init();
     }
 
     public void init() {
         String[] locationStrSplit = location.split(", ");
-        locationLong = Double.parseDouble(locationStrSplit[0]);
-        locationLat = Double.parseDouble(locationStrSplit[1]);
+        locationLatLng[0] = Double.parseDouble(locationStrSplit[0]);
+        locationLatLng[1] = Double.parseDouble(locationStrSplit[1]);
     }
 
     public String getName() {
@@ -39,11 +37,7 @@ public class UserProfile {
         return location;
     }
 
-    public double[] retrieveLocation() {
-        double[] locationDouble = new double[2];
-        locationDouble[0] = locationLong;
-        locationDouble[1] = locationLat;
-
-        return locationDouble;
+    public double[] retrieveLatLng() {
+        return locationLatLng;
     }
 }
