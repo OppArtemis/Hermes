@@ -16,7 +16,7 @@ public class UserProfile {
     }
 
     public void init() {
-        String[] locationStrSplit = location.split(", ");
+        String[] locationStrSplit = location.split(",");
         locationLatLng[0] = Double.parseDouble(locationStrSplit[0]);
         locationLatLng[1] = Double.parseDouble(locationStrSplit[1]);
     }
