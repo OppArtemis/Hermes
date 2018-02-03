@@ -48,16 +48,30 @@
         android:textSize="@dimen/button_text_size"/>
 
     <Button
-        android:id="@+id/button_startSearch"
+        android:id="@+id/button_startSearchGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/location_target_edit"
+        android:layout_marginLeft="13dp"
+        android:layout_marginStart="13dp"
+        android:layout_toEndOf="@+id/button_startSearch"
+        android:layout_toRightOf="@+id/button_startSearch"
         android:background="@color/colorSlateBlue"
         android:text="@string/start_search"
         android:textColor="@color/colorWhite"
+        android:textSize="@dimen/button_text_size" />/>
+
+    <Button
+        android:id="@+id/button_startSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/fetch_address_button"
         android:layout_alignBottom="@+id/fetch_address_button"
         android:layout_centerHorizontal="true"
-        android:textSize="@dimen/button_text_size"/>/>
+        android:background="@color/colorSlateBlue"
+        android:text="@string/start_search"
+        android:textColor="@color/colorWhite"
+        android:textSize="@dimen/button_text_size" />
 
     <EditText
         android:id="@+id/location_target_edit"
