@@ -34,6 +34,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -156,12 +157,9 @@ public class Naviations extends AppCompatActivity
 
     private EditText mLocationTargetEditText;
     private Button mStartSearch;
-<<<<<<< HEAD
 
     // ListView object that lists all restaurants
-=======
     private Button mStartSearchGroup;
->>>>>>> f3b8ddef2fa003833c495034881e58bac9a25b75
     private ListView mRetrievedRestaurants;
 
     // ListAdapter object that displays restaurant info
@@ -230,8 +228,6 @@ public class Naviations extends AppCompatActivity
                 startSearchWithYelp();
             }
         });
-<<<<<<< HEAD
-=======
 
         mStartSearchGroup.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -252,7 +248,6 @@ public class Naviations extends AppCompatActivity
                 navigateToLocation(polledStringSplit[0]);
             }
         });
->>>>>>> f3b8ddef2fa003833c495034881e58bac9a25b75
     }
 
     @Override
