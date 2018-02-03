@@ -35,7 +35,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -81,11 +80,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import com.artemis.hermes.android.ListAdapter.customButtonListener;
 
 
 /**
@@ -106,7 +106,8 @@ import java.util.concurrent.TimeUnit;
  * For an example that shows location updates using the Fused Location Provider API, see
  * https://github.com/googlesamples/android-play-location/tree/master/LocationUpdates.
  */
-public class Naviations extends AppCompatActivity {
+public class Naviations extends AppCompatActivity
+        implements customButtonListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
@@ -156,9 +157,16 @@ public class Naviations extends AppCompatActivity {
 
     private EditText mLocationTargetEditText;
     private Button mStartSearch;
+
+    // ListView object that lists all restaurants
     private Button mStartSearchGroup;
     private ListView mRetrievedRestaurants;
-    private ArrayAdapter<String> adapter;
+
+    // ListAdapter object that displays restaurant info
+    private ListAdapter adapter;
+
+    // List of Yelp restaurant objects
+    private List<RestaurantYelpHandle> mRestaurantObjects = new ArrayList<>();
 
     // Yelp client API object
     private YelpFusionApi mYelpFusionApi;
@@ -178,13 +186,6 @@ public class Naviations extends AppCompatActivity {
 
         mRetrievedRestaurants = findViewById(R.id.list_retrievedRestaurants);
 
-        // Create a new Adapter
-        adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1);
-
-        // Assign adapter to ListView
-        mRetrievedRestaurants.setAdapter(adapter);
-
         // Set defaults, then update using values stored in the Bundle.
         mAddressRequested = false;
         mCurrentAddressOutput = getString(R.string.current_location_searching);
@@ -194,6 +195,21 @@ public class Naviations extends AppCompatActivity {
 
         fetchAddressButtonHandler(null);
         setHandles();
+    }
+
+    @Override
+    public void onNavigateButtonClickListener(int position, String value) {
+        // In the event that there is "|" separators, we just need the first index of the
+        // string for the address
+        String [] polledStringSplit = value.split("\\|");
+        navigateToLocation(polledStringSplit[0]);
+    }
+
+    @Override
+    public void onFeedbackButtonClickListener(int position, String value) {
+        // Get the restaurant object based on the position
+        RestaurantAbstract restaurantObj = mRestaurantObjects.get(position);
+        goToRestaurantFeedback(restaurantObj);
     }
 
     public void setHandles() {
@@ -350,13 +366,11 @@ public class Naviations extends AppCompatActivity {
      */
     private void updateLocationInDatabase(){
         // Instantiate a reference to the database
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
 
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        String userId = bundle.getString("userId");
+        String userId = getIntent().getExtras().getString("userId");
 
-        mDatabase.child("users").
+        database.child("users").
                 child(userId).
                 child("address").
                 setValue(mCurrentAddressOutput);
@@ -366,7 +380,7 @@ public class Naviations extends AppCompatActivity {
             String locationString = mLastLocation.getLatitude() +
                     "," + mLastLocation.getLongitude();
 
-            mDatabase.child("users").
+            database.child("users").
                     child(userId).
                     child("location").
                     setValue(locationString);
@@ -672,37 +686,42 @@ public class Naviations extends AppCompatActivity {
                 @Override
                 public void onResponse(Call<SearchResponse> call,
                                        retrofit2.Response<SearchResponse> response) {
-                    if (response.isSuccessful()) {
 
-                        // Clear the default list of info.
-                        adapter.clear();
+                    ArrayList<String> restaurantDataToDisplay = new ArrayList<>();
+
+                    if (response.isSuccessful()) {
 
                         // Get all the businesses from response.
                         SearchResponse searchResponse = response.body();
                         List<Business> businesses = searchResponse.getBusinesses();
 
-                        List<RestaurantYelpHandle> restaurantObjects = new ArrayList<>();
+                        // Empty the array
+                        mRestaurantObjects = new ArrayList<>();
 
                         // Iterate through each restaurant, and get information from each.
                         for (int i = 0; i < businesses.size(); i++) {
-                            restaurantObjects.add(new RestaurantYelpHandle(businesses.get(i)));
+                            mRestaurantObjects.add(new RestaurantYelpHandle(businesses.get(i)));
                         }
 
                         // Sort restaurant list
-                        sortRetrievedYelpRestaurants(restaurantObjects);
+                        sortRetrievedYelpRestaurants(mRestaurantObjects);
 
                         // Add new list to the listview adapter
                         for (int i = 0; i < businesses.size(); i++) {
-                            adapter.add(restaurantObjects.get(i).toFullString());
+                            restaurantDataToDisplay.add(mRestaurantObjects.get(i).toString());
                         }
+
+                        adapter = new ListAdapter(Naviations.this, restaurantDataToDisplay);
+                        adapter.setCustomButtonListener(Naviations.this);
+                        mRetrievedRestaurants.setAdapter(adapter);
                     } else {
-                        adapter.add("HTTP Response was not successful: " + response.code());
+                        showToast("HTTP Response was not successful: " + response.code());
                     }
                 }
                 @Override
                 public void onFailure(Call<SearchResponse> call, Throwable t) {
                     // HTTP error happened, do something to handle it.
-                    adapter.add("Cannot find restaurants due to HTTP error");
+                    showToast("Cannot find restaurants due to HTTP error");
                     Log.d(TAG, "Failure on Yelp Search API:\n" + t.toString());
                 }
             };
@@ -782,8 +801,7 @@ public class Naviations extends AppCompatActivity {
                         try {
                             JSONArray jsonResponseArray = response.getJSONArray("results");
 
-                            adapter.clear();
-
+                            ArrayList<String> restaurantDataToDisplay = new ArrayList<>();
                             foundLocations = new ArrayList<>();
                             for (int i = 0; i < jsonResponseArray.length(); i++) {
                                 JSONObject currResponse = jsonResponseArray.getJSONObject(i);
@@ -791,6 +809,10 @@ public class Naviations extends AppCompatActivity {
 
                                 adapter.add(foundLocations.get(i).toString());
                             }
+
+                            adapter = new ListAdapter(Naviations.this, restaurantDataToDisplay);
+                            adapter.setCustomButtonListener(Naviations.this);
+                            mRetrievedRestaurants.setAdapter(adapter);
                         }
                         // Try and catch are included to handle any errors due to JSON
                         catch (JSONException e) {
@@ -813,10 +835,37 @@ public class Naviations extends AppCompatActivity {
         requestQueue.add(obreq);
     }
 
+
+    /**
+     * Method to go to Restaurant Feedback page
+     *
+     * @param restaurantObj restaurant object to pass to the RestaurantFeedbackActivity
+     *
+     */
+    private void goToRestaurantFeedback(RestaurantAbstract restaurantObj) {
+
+        Intent feedbackIntent = new Intent(this, RestaurantFeedbackActivity.class);
+
+        String userId = getIntent().getExtras().getString("userId");
+
+        // Pass the user ID
+        feedbackIntent.putExtra("userId", userId);
+
+        // Pass the restaurant object
+        feedbackIntent.putExtra("serialize_data", restaurantObj);
+        startActivity(feedbackIntent);
+    }
+
+    /**
+     * Method to start navigation with Google Maps
+     *
+     */
     private void navigateToLocation(String targetLocation) {
         String sourceLocation = mCurrentAddressOutput;
-//        String targetLocation = targetAddress;
         String transportationMode = "driving";
+
+        // Since this will be converted into URI, it does not like "&" (e.g. A&W)
+        targetLocation = targetLocation.replace("&","");
 
         String mapUrl = "https://www.google.com/maps/dir/?api=1" +
                 "&origin=" + sourceLocation +

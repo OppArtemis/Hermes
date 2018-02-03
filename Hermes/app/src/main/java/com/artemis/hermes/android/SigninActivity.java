@@ -108,7 +108,7 @@ public class SigninActivity extends AppCompatActivity {
         showMapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                goToMap();
+                goToLocationServices();
             }
         });
     }
@@ -150,14 +150,13 @@ public class SigninActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper method to start an activity on maps.
+     * Helper method to start an activity on Restaurant Location services.
      *
      */
-    private void goToMap(){
+    private void goToLocationServices(){
         Intent mapIntent = new Intent(this, Naviations.class);
         mapIntent.putExtra("userId", mUserId);
         startActivity(mapIntent);
-        finish();
     }
 
     /**
