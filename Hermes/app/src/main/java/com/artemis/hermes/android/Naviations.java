@@ -80,8 +80,10 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -345,32 +347,31 @@ public class Naviations extends AppCompatActivity {
     }
 
     /**
+     * Helper method store basic information onto database.
+     *
+     */
+    private void storeBasicInfoIntoDatabase(){
+
+    }
+
+    /**
      * Helper method to set location on database.
      *
      */
     private void updateLocationInDatabase(){
         // Instantiate a reference to the database
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser userInstance = auth.getCurrentUser();
 
-        Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
-        String userId = bundle.getString("userId");
+        Calendar currentTime = Calendar.getInstance();
 
+        UserProfile newUser = new UserProfile(userInstance, mCurrentAddressOutput, mLastLocation, currentTime);
+
+        // save results to db
         mDatabase.child("users").
-                child(userId).
-                child("address").
-                setValue(mCurrentAddressOutput);
-
-        // Store the raw location (latitude and longitude just in case)
-        if (mLastLocation != null) {
-            String locationString = mLastLocation.getLatitude() +
-                    "," + mLastLocation.getLongitude();
-
-            mDatabase.child("users").
-                    child(userId).
-                    child("location").
-                    setValue(locationString);
-        }
+                child(newUser.getId()).
+                setValue(newUser);
     }
 
     /**
@@ -593,31 +594,53 @@ public class Naviations extends AppCompatActivity {
 
             if (newPost.getName().equals(currentUserName)) {
                 currentUser = newPost;
-                currentUser.init();
                 break;
             }
         }
 
         List<UserProfile> closebyUsers = new ArrayList<>();
-        double[] currentLocation = currentUser.retrieveLatLng();
-        double disTol = 0.5; // 0.5 km
+        List<Double> currentLocation = currentUser.getLocationLatLng();
+
         for (DataSnapshot child: dataSnapshot.getChildren()) {
             UserProfile newPost = child.getValue(UserProfile.class);
-            newPost.init();
-            double[] newLocation = newPost.retrieveLatLng();
+            List<Double> newLocation = newPost.getLocationLatLng();
 
-            if (checkDistance(newLocation, currentLocation) < disTol) {
+            if (checkTimeAndDistance(currentUser, newPost)) {
                 closebyUsers.add(newPost);
             }
         }
 
-        // return a list of users
+        // return a list of users at "closebyUsers"
         int la = 0;
     }
 
-    public double checkDistance(double[] latlng1, double[] latlng2) {
+    public boolean checkTimeAndDistance(UserProfile source, UserProfile target) {
+        // check time
+        double deltaTime = checkTime(source.getLastLoginTime(), target.getLastLoginTime());
+
+//        String test1 = Constants.timeString(source.getLastLoginTime());
+//        String test2 = Constants.timeString(target.getLastLoginTime());
+
+        if (deltaTime > Constants.TIME_THRESHOLD) {
+            return false;
+        }
+
+        // check distance
+        double deltaDistance = checkDistance(source.getLocationLatLng(), target.getLocationLatLng());
+        if (deltaDistance > Constants.DISTANCE_THRESHOLD) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public double checkTime(double sourceTime, double targetTime) {
+        return Math.abs(sourceTime - targetTime) / 1000.0; // convert ms -> s
+    }
+
+    public double checkDistance(List<Double> sourceLatLng, List<Double> targetLatLng) {
         float[] results = new float[1];
-        Location.distanceBetween(latlng1[0], latlng1[1], latlng2[0], latlng2[1], results);
+        Location.distanceBetween(sourceLatLng.get(0), sourceLatLng.get(1), targetLatLng.get(0), targetLatLng.get(1), results);
 
         return Double.parseDouble(Float.toString(results[0]));
     }

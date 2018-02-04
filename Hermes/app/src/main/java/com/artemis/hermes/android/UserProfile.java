@@ -1,24 +1,52 @@
 package com.artemis.hermes.android;
 
+import android.location.Location;
+
+import com.google.common.math.DoubleMath;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
 /**
  * Created by jf2lin on 02/03/2018.
  */
 
 public class UserProfile {
+    private String id;
     private String name;
     private String address;
-    private String lastLoginTime;
-    private String location;
-    private double[] locationLatLng = new double[2];
+    private long lastLoginTime;
+    private List<Double> locationLatLng;
 
     UserProfile() {
         // blank constructor for Firebase needs
     }
 
-    public void init() {
-        String[] locationStrSplit = location.split(",");
-        locationLatLng[0] = Double.parseDouble(locationStrSplit[0]);
-        locationLatLng[1] = Double.parseDouble(locationStrSplit[1]);
+    UserProfile(FirebaseUser user, String address, Location location, Calendar lastLoginTime) {
+        this.id = user.getUid();
+        this.name = user.getDisplayName();
+        this.address = address;
+        this.locationLatLng = locationToDoubleArray(location);
+        this.lastLoginTime = lastLoginTime.getTimeInMillis();
+    }
+
+    public List<Double> locationToDoubleArray(Location location) {
+        List<Double> newArray = new ArrayList<>();
+        newArray.add(location.getLatitude());
+        newArray.add(location.getLongitude());
+
+        return newArray;
+    }
+
+    public String toString() {
+        return name;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getName() {
@@ -29,15 +57,11 @@ public class UserProfile {
         return address;
     }
 
-    public String getLastLoginTime() {
+    public long getLastLoginTime() {
         return lastLoginTime;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public double[] retrieveLatLng() {
+    public List<Double> getLocationLatLng() {
         return locationLatLng;
     }
 }
