@@ -1,5 +1,7 @@
 package com.artemis.hermes.android;
 
+import java.text.SimpleDateFormat;
+
 /**
  *  Class to store constants.
  *
@@ -19,4 +21,12 @@ public final class Constants {
 
     // URL of the project API
     public static final String API_ROOT_URL = "https://hermes-c1b9b.appspot.com/_ah/api/";
+
+    public static final double DISTANCE_THRESHOLD = 500; // 0.5 km
+    public static final double TIME_THRESHOLD = 60*20; // 20 min
+
+    public static String timeString(long timeInMs) {
+        SimpleDateFormat dateFormatLong = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return dateFormatLong.format(timeInMs);
+    }
 }

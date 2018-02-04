@@ -79,7 +79,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +161,6 @@ public class Naviations extends AppCompatActivity
     private Button mStartSearch;
 
     // ListView object that lists all restaurants
-    private Button mStartSearchGroup;
     private ListView mRetrievedRestaurants;
 
     // ListAdapter object that displays restaurant info
@@ -182,7 +183,6 @@ public class Naviations extends AppCompatActivity
         mFetchAddressButton = findViewById(R.id.fetch_address_button);
         mLocationTargetEditText = findViewById(R.id.location_target_edit);
         mStartSearch = findViewById(R.id.button_startSearch);
-        mStartSearchGroup = findViewById(R.id.button_startSearchGroup);
 
         mRetrievedRestaurants = findViewById(R.id.list_retrievedRestaurants);
 
@@ -225,15 +225,7 @@ public class Naviations extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 //startSearchWithGoogle();
-                startSearchWithYelp();
-            }
-        });
-
-        mStartSearchGroup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //startSearchWithGoogle();
-                startSearchWithYelpGroup();
+                pollNearbyUsers();
             }
         });
 
@@ -361,30 +353,31 @@ public class Naviations extends AppCompatActivity
     }
 
     /**
+     * Helper method store basic information onto database.
+     *
+     */
+    private void storeBasicInfoIntoDatabase(){
+
+    }
+
+    /**
      * Helper method to set location on database.
      *
      */
     private void updateLocationInDatabase(){
         // Instantiate a reference to the database
-        DatabaseReference database = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser userInstance = auth.getCurrentUser();
 
-        String userId = getIntent().getExtras().getString("userId");
+        Calendar currentTime = Calendar.getInstance();
 
-        database.child("users").
-                child(userId).
-                child("address").
-                setValue(mCurrentAddressOutput);
+        UserProfile newUser = new UserProfile(userInstance, mCurrentAddressOutput, mLastLocation, currentTime);
 
-        // Store the raw location (latitude and longitude just in case)
-        if (mLastLocation != null) {
-            String locationString = mLastLocation.getLatitude() +
-                    "," + mLastLocation.getLongitude();
-
-            database.child("users").
-                    child(userId).
-                    child("location").
-                    setValue(locationString);
-        }
+        // save results to db
+        mDatabase.child("users").
+                child(newUser.getId()).
+                setValue(newUser);
     }
 
     /**
@@ -579,7 +572,7 @@ public class Naviations extends AppCompatActivity
         }
     }
 
-    public void startSearchWithYelpGroup() {
+    public void pollNearbyUsers() {
         // find nearby people
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference refUserNode = database.getReference("users" + "/");
@@ -601,37 +594,56 @@ public class Naviations extends AppCompatActivity
     public void onUserDataRead(DataSnapshot dataSnapshot) {
         UserProfile currentUser = new UserProfile();
         String currentUserName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+        List<UserProfile> closebyUsers = new ArrayList<>();
 
         for (DataSnapshot child: dataSnapshot.getChildren()) {
             UserProfile newPost = child.getValue(UserProfile.class);
 
             if (newPost.getName().equals(currentUserName)) {
                 currentUser = newPost;
-                currentUser.init();
                 break;
             }
         }
 
-        List<UserProfile> closebyUsers = new ArrayList<>();
-        double[] currentLocation = currentUser.retrieveLatLng();
-        double disTol = 0.5; // 0.5 km
         for (DataSnapshot child: dataSnapshot.getChildren()) {
             UserProfile newPost = child.getValue(UserProfile.class);
-            newPost.init();
-            double[] newLocation = newPost.retrieveLatLng();
 
-            if (checkDistance(newLocation, currentLocation) < disTol) {
+            if (checkTimeAndDistance(currentUser, newPost)) {
                 closebyUsers.add(newPost);
             }
         }
 
-        // return a list of users
-        int la = 0;
+        // return a list of users at "closebyUsers"
+        startSearchWithYelpStage2(closebyUsers);
     }
 
-    public double checkDistance(double[] latlng1, double[] latlng2) {
+    public boolean checkTimeAndDistance(UserProfile source, UserProfile target) {
+        // check time
+        double deltaTime = checkTime(source.getLastLoginTime(), target.getLastLoginTime());
+
+//        String test1 = Constants.timeString(source.getLastLoginTime());
+//        String test2 = Constants.timeString(target.getLastLoginTime());
+
+        if (deltaTime > Constants.TIME_THRESHOLD) {
+            return false;
+        }
+
+        // check distance
+        double deltaDistance = checkDistance(source.getLocationLatLng(), target.getLocationLatLng());
+        if (deltaDistance > Constants.DISTANCE_THRESHOLD) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public double checkTime(double sourceTime, double targetTime) {
+        return Math.abs(sourceTime - targetTime) / 1000.0; // convert ms -> s
+    }
+
+    public double checkDistance(List<Double> sourceLatLng, List<Double> targetLatLng) {
         float[] results = new float[1];
-        Location.distanceBetween(latlng1[0], latlng1[1], latlng2[0], latlng2[1], results);
+        Location.distanceBetween(sourceLatLng.get(0), sourceLatLng.get(1), targetLatLng.get(0), targetLatLng.get(1), results);
 
         return Double.parseDouble(Float.toString(results[0]));
     }
@@ -642,7 +654,7 @@ public class Naviations extends AppCompatActivity
      * It will set the adapter with search results.
      *
      */
-    private void startSearchWithYelp(){
+    private void startSearchWithYelpStage2(List<UserProfile> nearbyUsers) {
         hideSoftwareKeyboard();
 
         String targetAddressFieldStr = mLocationTargetEditText.getText().toString();

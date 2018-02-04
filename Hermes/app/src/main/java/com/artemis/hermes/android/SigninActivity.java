@@ -76,7 +76,7 @@ public class SigninActivity extends AppCompatActivity {
         }
 
         // Store information in the database
-        storeBasicInfoIntoDatabase();
+        mUserId = auth.getCurrentUser().getUid();
 
         // Set up the profile page
         setContentView(R.layout.activity_signin);
@@ -157,30 +157,6 @@ public class SigninActivity extends AppCompatActivity {
         Intent mapIntent = new Intent(this, Naviations.class);
         mapIntent.putExtra("userId", mUserId);
         startActivity(mapIntent);
-    }
-
-    /**
-     * Helper method store basic information onto database.
-     *
-     */
-    private void storeBasicInfoIntoDatabase(){
-        // Instantiate a reference to the database
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-
-        // User ID acts as the key to the database
-        mUserId = auth.getCurrentUser().getUid();
-
-        Date currentTime = Calendar.getInstance().getTime();
-        String userName = auth.getCurrentUser().getDisplayName();
-
-        mDatabase.child("users").
-                child(mUserId).
-                child("name").
-                setValue(userName);
-        mDatabase.child("users").
-                child(mUserId).
-                child("lastLoginTime").
-                setValue(String.valueOf(currentTime));
     }
 
     /**
