@@ -1,13 +1,10 @@
 package com.artemis.hermes.android;
 
 import android.location.Location;
-
-import com.google.common.math.DoubleMath;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 /**

@@ -588,6 +588,7 @@ public class Naviations extends AppCompatActivity {
     public void onUserDataRead(DataSnapshot dataSnapshot) {
         UserProfile currentUser = new UserProfile();
         String currentUserName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+        List<UserProfile> closebyUsers = new ArrayList<>();
 
         for (DataSnapshot child: dataSnapshot.getChildren()) {
             UserProfile newPost = child.getValue(UserProfile.class);
@@ -598,19 +599,15 @@ public class Naviations extends AppCompatActivity {
             }
         }
 
-        List<UserProfile> closebyUsers = new ArrayList<>();
-        List<Double> currentLocation = currentUser.getLocationLatLng();
-
         for (DataSnapshot child: dataSnapshot.getChildren()) {
             UserProfile newPost = child.getValue(UserProfile.class);
-            List<Double> newLocation = newPost.getLocationLatLng();
 
             if (checkTimeAndDistance(currentUser, newPost)) {
                 closebyUsers.add(newPost);
             }
         }
 
-        // return a list of users at "closebyUsers"
+        // return a list of users at "closebyUsers" todo pass the list into startSearchWithYelp
         int la = 0;
     }
 
