@@ -15,6 +15,10 @@ public class RestaurantFeedback {
     private float restaurantRating;
     private float cuisineRating;
 
+    RestaurantFeedback(){
+
+    }
+
     RestaurantFeedback (String name, float restaurantRating, float cuisineRating) {
         this.name = name;
         this.restaurantRating = restaurantRating;

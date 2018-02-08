@@ -15,6 +15,7 @@ import java.util.Comparator;
  * @since   2017-09-25
  */
 
+@SuppressWarnings("WeakerAccess")
 public abstract class RestaurantAbstract implements Serializable {
     protected String name;
     protected String addressFull;
@@ -105,6 +106,8 @@ public abstract class RestaurantAbstract implements Serializable {
 
     // --- SETTERS ---
     public void addToSortScore(int sortScore) { this.sortScore = this.sortScore + sortScore; }
+
+    public void setRating(double rating) {this.rating = rating; }
 
     // --- OTHER METHODS ---
 

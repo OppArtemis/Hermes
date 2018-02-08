@@ -586,7 +586,7 @@ public class Naviations extends AppCompatActivity
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getCode());
+                Log.d(TAG, "The read failed: " + databaseError.getCode());
             }
         });
     }
@@ -654,7 +654,7 @@ public class Naviations extends AppCompatActivity
      * It will set the adapter with search results.
      *
      */
-    private void startSearchWithYelpStage2(List<UserProfile> nearbyUsers) {
+    private void startSearchWithYelpStage2(final List<UserProfile> nearbyUsers) {
         hideSoftwareKeyboard();
 
         String targetAddressFieldStr = mLocationTargetEditText.getText().toString();
@@ -699,8 +699,6 @@ public class Naviations extends AppCompatActivity
                 public void onResponse(Call<SearchResponse> call,
                                        retrofit2.Response<SearchResponse> response) {
 
-                    ArrayList<String> restaurantDataToDisplay = new ArrayList<>();
-
                     if (response.isSuccessful()) {
 
                         // Get all the businesses from response.
@@ -715,17 +713,8 @@ public class Naviations extends AppCompatActivity
                             mRestaurantObjects.add(new RestaurantYelpHandle(businesses.get(i)));
                         }
 
-                        // Sort restaurant list
-                        sortRetrievedYelpRestaurants(mRestaurantObjects);
-
-                        // Add new list to the listview adapter
-                        for (int i = 0; i < businesses.size(); i++) {
-                            restaurantDataToDisplay.add(mRestaurantObjects.get(i).toString());
-                        }
-
-                        adapter = new ListAdapter(Naviations.this, restaurantDataToDisplay);
-                        adapter.setCustomButtonListener(Naviations.this);
-                        mRetrievedRestaurants.setAdapter(adapter);
+                        // To add user feedback into the ratings
+                        analyzeRestaurantsWithUserRating(nearbyUsers);
                     } else {
                         showToast("HTTP Response was not successful: " + response.code());
                     }
@@ -742,23 +731,129 @@ public class Naviations extends AppCompatActivity
         }
     }
 
-    private List<RestaurantYelpHandle> sortRetrievedYelpRestaurants(List<RestaurantYelpHandle> inputArray) {
-        // sort by rating
-        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_RATING);
-        for (int i = 0; i < inputArray.size(); i++) {
-            inputArray.get(i).addToSortScore(i);
+    /**
+     * Method to get the all users' rating from database.
+     *
+     * @param nearbyUsers List of UserProfile objects.
+     *
+     */
+    public void analyzeRestaurantsWithUserRating(List<UserProfile> nearbyUsers) {
+
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+        for (int i = 0; i < nearbyUsers.size(); i++) {
+            UserProfile user = nearbyUsers.get(i);
+            String userId = user.getId();
+            DatabaseReference refUserNode = database.getReference("restaurant_feedback" + "/" + userId + "/");
+
+            // Attach a listener to read the data at our posts reference
+            refUserNode.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    onRestaurantFeedbackRead(dataSnapshot);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    Log.d(TAG, "The read failed: " + databaseError.getCode());
+                }
+            });
+        }
+    }
+
+    /**
+     * Actual logic for analyzeRestaurantsWithUserRating.
+     *
+     * @param dataSnapshot Snapshot of database.
+     *
+     */
+    private void onRestaurantFeedbackRead(DataSnapshot dataSnapshot) {
+        List<RestaurantFeedback> restaurantFeedbacks = new ArrayList<>();
+        for (DataSnapshot child: dataSnapshot.getChildren()) {
+            RestaurantFeedback newFeedback = child.getValue(RestaurantFeedback.class);
+            restaurantFeedbacks.add(newFeedback);
         }
 
-        // sort by distance
-        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_DISTANCE);
-        for (int i = 0; i < inputArray.size(); i++) {
-            inputArray.get(i).addToSortScore(i);
+        // Hash Map to keep track of list of ratings made by users (per restaurant)
+        Map<String, List<Float>> ratingByRestaurant = new HashMap<>();
+
+        // Iterate through all current user's feedback
+        for (int k = 0; k < restaurantFeedbacks.size(); k++) {
+            RestaurantFeedback currentFeedback = restaurantFeedbacks.get(k);
+
+            float currentRating = currentFeedback.getRestaurantRating();
+            String currentRestaurant = currentFeedback.getName();
+
+            List<Float> existingRating = ratingByRestaurant.get(currentRestaurant);
+
+            if (existingRating != null) {
+                existingRating.add(currentRating);
+
+                // Add updated list to the Hash Map
+                ratingByRestaurant.put(currentRestaurant, existingRating);
+            } else {
+                List<Float> newRating = new ArrayList<>();
+                newRating.add(currentRating);
+                ratingByRestaurant.put(currentRestaurant, newRating);
+            }
         }
 
-        // finally, sort by the sort score
-        Collections.sort(inputArray, RestaurantYelpHandle.COMPARE_BY_SORTSCORE);
+        // Iterate through all the scoped restaurants
+        for (int i = 0; i < mRestaurantObjects.size(); i++) {
+            RestaurantAbstract currentRestaurantObj = mRestaurantObjects.get(i);
 
-        return inputArray;
+            // Short unique name is by which the RestaurantFeedback used to save restaurant's name
+            String restaurantUniqueName = currentRestaurantObj.toShortUniqueName();
+
+            double internetRating = currentRestaurantObj.getRating();
+
+            double finalRating;
+
+            List<Float> userRestaurantRatings = ratingByRestaurant.get(restaurantUniqueName);
+
+            // Cases:
+            // 1. All users have been to restaurant
+            //      Take average
+            //
+            // 2. None of the users have been to restaurant
+            //      User internet's rating
+            //
+            // 3. Some users have been to a restaurant
+            //      Take average
+            //
+            //    3a) edge case: only 1 user have been to restaurant
+            //        Take average with user and yelp???
+            if (userRestaurantRatings != null) {
+                double sum = 0;
+                for (int h = 0; h < userRestaurantRatings.size(); h++) {
+                    sum += userRestaurantRatings.get(h);
+                }
+
+                finalRating = sum / userRestaurantRatings.size();
+                Log.d(TAG, "--- Using user's feedback on restaurant --- " + restaurantUniqueName);
+
+                // Set the rating with user's feedback
+                currentRestaurantObj.setRating(finalRating);
+            }
+        }
+
+        mRestaurantObjects = EngineUtilities.sortRetrievedYelpRestaurants(mRestaurantObjects);
+        displayRestaurantsOnAdapter();
+    }
+
+    /**
+     * Displays the list of restaurants on the Adapter objects.
+     *
+     */
+    private void displayRestaurantsOnAdapter () {
+        ArrayList<String> restaurantDataToDisplay = new ArrayList<>();
+        for (int i = 0; i < mRestaurantObjects.size(); i++) {
+            restaurantDataToDisplay.add(mRestaurantObjects.get(i).toString());
+        }
+
+        adapter = new ListAdapter(Naviations.this, restaurantDataToDisplay);
+        adapter.setCustomButtonListener(Naviations.this);
+        mRetrievedRestaurants.setAdapter(adapter);
     }
 
     /**
