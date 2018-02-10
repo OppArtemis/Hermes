@@ -593,13 +593,13 @@ public class Naviations extends AppCompatActivity
 
     public void onUserDataRead(DataSnapshot dataSnapshot) {
         UserProfile currentUser = new UserProfile();
-        String currentUserName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         List<UserProfile> closebyUsers = new ArrayList<>();
 
         for (DataSnapshot child: dataSnapshot.getChildren()) {
             UserProfile newPost = child.getValue(UserProfile.class);
 
-            if (newPost.getName().equals(currentUserName)) {
+            if (newPost.getId().equals(currentUserId)) {
                 currentUser = newPost;
                 break;
             }
@@ -610,11 +610,12 @@ public class Naviations extends AppCompatActivity
 
             if (checkTimeAndDistance(currentUser, newPost)) {
                 closebyUsers.add(newPost);
+                Log.d("--- Found user --- ", newPost.getId());
             }
         }
 
         // return a list of users at "closebyUsers"
-        Log.d("Nearby users found ", String.valueOf(closebyUsers.size()));
+        Log.d("--- Nearby users: --- ", String.valueOf(closebyUsers.size()));
         startSearchWithYelpStage2(closebyUsers);
     }
 
