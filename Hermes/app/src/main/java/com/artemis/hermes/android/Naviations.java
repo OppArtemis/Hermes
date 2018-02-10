@@ -614,6 +614,7 @@ public class Naviations extends AppCompatActivity
         }
 
         // return a list of users at "closebyUsers"
+        Log.d("Nearby users found ", String.valueOf(closebyUsers.size()));
         startSearchWithYelpStage2(closebyUsers);
     }
 
@@ -740,25 +741,21 @@ public class Naviations extends AppCompatActivity
     public void analyzeRestaurantsWithUserRating(List<UserProfile> nearbyUsers) {
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final List<UserProfile> userObjs = nearbyUsers;
+        DatabaseReference refUserNode = database.getReference("restaurant_feedback");
 
-        for (int i = 0; i < nearbyUsers.size(); i++) {
-            UserProfile user = nearbyUsers.get(i);
-            String userId = user.getId();
-            DatabaseReference refUserNode = database.getReference("restaurant_feedback" + "/" + userId + "/");
+        // Attach a listener to read the data at our posts reference
+        refUserNode.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                onRestaurantFeedbackRead(dataSnapshot, userObjs);
+            }
 
-            // Attach a listener to read the data at our posts reference
-            refUserNode.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    onRestaurantFeedbackRead(dataSnapshot);
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    Log.d(TAG, "The read failed: " + databaseError.getCode());
-                }
-            });
-        }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "The read failed: " + databaseError.getCode());
+            }
+        });
     }
 
     /**
@@ -767,11 +764,18 @@ public class Naviations extends AppCompatActivity
      * @param dataSnapshot Snapshot of database.
      *
      */
-    private void onRestaurantFeedbackRead(DataSnapshot dataSnapshot) {
+    private void onRestaurantFeedbackRead(DataSnapshot dataSnapshot, List<UserProfile> userObjs) {
         List<RestaurantFeedback> restaurantFeedbacks = new ArrayList<>();
-        for (DataSnapshot child: dataSnapshot.getChildren()) {
-            RestaurantFeedback newFeedback = child.getValue(RestaurantFeedback.class);
-            restaurantFeedbacks.add(newFeedback);
+
+        for (int i = 0; i < userObjs.size(); i++) {
+            String userId = userObjs.get(i).getId();
+            Log.d(TAG, "getting feedback from user " + userId);
+            DataSnapshot userFeedbackSnapshot = dataSnapshot.child(userId);
+
+            for (DataSnapshot child: userFeedbackSnapshot.getChildren()) {
+                RestaurantFeedback newFeedback = child.getValue(RestaurantFeedback.class);
+                restaurantFeedbacks.add(newFeedback);
+            }
         }
 
         // Hash Map to keep track of list of ratings made by users (per restaurant)
@@ -798,46 +802,12 @@ public class Naviations extends AppCompatActivity
             }
         }
 
-        // Iterate through all the scoped restaurants
-        for (int i = 0; i < mRestaurantObjects.size(); i++) {
-            RestaurantAbstract currentRestaurantObj = mRestaurantObjects.get(i);
+        // Add user's ratings into considerations
+        EngineUtilities.addUserRatingsIntoRestaurants(mRestaurantObjects,
+                ratingByRestaurant, userObjs.size());
 
-            // Short unique name is by which the RestaurantFeedback used to save restaurant's name
-            String restaurantUniqueName = currentRestaurantObj.toShortUniqueName();
-
-            double internetRating = currentRestaurantObj.getRating();
-
-            double finalRating;
-
-            List<Float> userRestaurantRatings = ratingByRestaurant.get(restaurantUniqueName);
-
-            // Cases:
-            // 1. All users have been to restaurant
-            //      Take average
-            //
-            // 2. None of the users have been to restaurant
-            //      User internet's rating
-            //
-            // 3. Some users have been to a restaurant
-            //      Take average
-            //
-            //    3a) edge case: only 1 user have been to restaurant
-            //        Take average with user and yelp???
-            if (userRestaurantRatings != null) {
-                double sum = 0;
-                for (int h = 0; h < userRestaurantRatings.size(); h++) {
-                    sum += userRestaurantRatings.get(h);
-                }
-
-                finalRating = sum / userRestaurantRatings.size();
-                Log.d(TAG, "--- Using user's feedback on restaurant --- " + restaurantUniqueName);
-
-                // Set the rating with user's feedback
-                currentRestaurantObj.setRating(finalRating);
-            }
-        }
-
-        mRestaurantObjects = EngineUtilities.sortRetrievedYelpRestaurants(mRestaurantObjects);
+        // Sort the restaurants (the best ones are listed first)
+        EngineUtilities.sortRetrievedYelpRestaurants(mRestaurantObjects);
         displayRestaurantsOnAdapter();
     }
 
